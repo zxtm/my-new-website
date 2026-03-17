@@ -468,7 +468,7 @@ body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--
    MODAL
 ══════════════════════════════════════ */
 .overlay {
-  position:fixed; inset:0; z-index:200;
+  position:fixed; inset:0; z-index:10000;
   background:rgba(0,0,0,0.72); backdrop-filter:blur(12px);
   display:flex; align-items:center; justify-content:center;
   opacity:0; pointer-events:none; transition:opacity 0.22s;
@@ -1568,15 +1568,7 @@ function openModal(id) {
 }
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
-  const mobile = window.innerWidth <= 768;
-  if (mobile) {
-    // 手机端：关闭弹窗后回到手机入口页，隐藏桌面 app
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('mobile-entry').style.display = 'flex';
-  } else {
-    // 桌面端：没有联系人时显示欢迎页
-    if (people.length === 0) showWelcome();
-  }
+  if (window.innerWidth > 768 && people.length === 0) showWelcome();
 }
 
 function savePerson() {
@@ -2053,12 +2045,7 @@ window.addEventListener('resize', ()=>{ if(page==='graph') renderGraph(); });
 
 // ── Mobile entry ──────────────────────────────────────────────
 function mobilAddContact() {
-  // 手机端：显示桌面 app 的 modal，隐藏手机入口页
-  document.getElementById('mobile-entry').style.display = 'none';
-  document.getElementById('app').style.display = 'grid';
   openModal();
-  // 保存后或取消后回到手机入口
-  const origClose = window._origClose;
 }
 
 // ── Startup ───────────────────────────────────────────────────
