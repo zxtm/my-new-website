@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>脉络 · NEXUS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+:root {
+  --bg:            #080808;
+  --glass-border:  rgba(255,255,255,0.06);
+  --glass-border2: rgba(255,255,255,0.11);
+  --sidebar-w:     210px;
+  --detail-w:      300px;
+  --detail-shown:  300px;
+  --cyan:          #e8c97a;
+  --teal:          #f0d99a;
+  --gold:          #e8c97a;
+  --rose:          #e07070;
+  --text:          #f2f0ec;
+  --text2:         rgba(230,225,215,0.48);
+  --text3:         rgba(200,195,185,0.28);
+  --glow:          0 0 24px rgba(232,201,122,0.18);
+  --radius:        12px;
+  --radius-sm:     8px;
+  --transition:    0.18s ease;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--text); }
+
+/* ── Background ── */
+.bg-wrap { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.bg-aurora {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(232,201,122,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 85% 90%, rgba(180,160,100,0.03) 0%, transparent 55%);
+}
+.bg-grid {
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+  background-size:50px 50px;
+  mask-image:radial-gradient(ellipse 100% 100% at 50% 50%, black 10%, transparent 80%);
+}
+.bg-particles { position:absolute; inset:0; overflow:hidden; }
+.particle {
+  position:absolute; border-radius:50%;
+  background:radial-gradient(circle, rgba(232,201,122,0.35), transparent);
+  animation:floatUp linear infinite; opacity:0;
+}
+@keyframes floatUp {
+  0%  { transform:translateY(100vh); opacity:0; }
+  8%  { opacity:0.4; }
+  92% { opacity:0.08; }
+  100%{ transform:translateY(-5vh); opacity:0; }
+}
+
+/* ══════════════════════════════════════
+   APP SHELL — 3-column grid
+══════════════════════════════════════ */
+#app {
+  position:relative; z-index:1;
+  display:grid;
+  grid-template-columns: var(--sidebar-w) 1fr 0px;
+  transition: grid-template-columns 0.3s cubic-bezier(0.4,0,0.2,1);
+  height:100vh;
+}
+
+/* ══════════════════════════════════════
+   LEFT SIDEBAR
+══════════════════════════════════════ */
+.sidebar {
+  display:flex; flex-direction:column;
+  background:linear-gradient(180deg, rgba(255,255,255,0.032) 0%, rgba(255,255,255,0.010) 100%);
+  backdrop-filter:blur(40px) saturate(180%);
+  -webkit-backdrop-filter:blur(40px) saturate(180%);
+  border-right:1px solid var(--glass-border);
+  overflow:hidden; position:relative;
+}
+.sidebar::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:120px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(232,201,122,0.04) 0%, transparent 100%);
+}
+
+/* Brand */
+.brand {
+  padding:18px 16px 14px;
+  border-bottom:1px solid var(--glass-border);
+  position:relative; z-index:1;
+  display:flex; align-items:center; gap:11px;
+}
+.brand-icon {
+  width:36px; height:36px; border-radius:10px; flex-shrink:0;
+  background:linear-gradient(135deg, rgba(232,201,122,0.18), rgba(160,130,60,0.28));
+  border:1px solid rgba(232,201,122,0.22);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(200,170,80,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.brand-text { display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:0; }
+.brand-name {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:13px;
+  letter-spacing:0.16em; text-transform:uppercase; line-height:1;
+  background:linear-gradient(135deg,#fff 0%,rgba(240,230,200,0.80) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  white-space:nowrap;
+}
+.brand-sub { font-size:9px; color:var(--text3); letter-spacing:0.1em; white-space:nowrap; line-height:1; }
+
+/* Stats */
+.sidebar-stats { padding:12px 14px; border-bottom:1px solid var(--glass-border); display:flex; flex-direction:column; gap:5px; }
+.stat-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:6px 9px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+}
+.stat-row-lbl { font-size:10px; color:var(--text2); }
+.stat-row-val {
+  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+  background:linear-gradient(135deg,var(--cyan),var(--teal));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+
+/* Nav section */
+.nav-section { padding:0 10px; margin-top:10px; }
+.nav-section-lbl {
+  font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.14em;
+  color:var(--text3); padding:0 8px 6px;
+}
+
+/* Nav items — the main menu */
+.nav-item {
+  display:flex; align-items:center; gap:9px;
+  padding:8px 10px; border-radius:var(--radius-sm); margin-bottom:2px;
+  cursor:pointer; border:1px solid transparent; transition:all var(--transition);
+  position:relative;
+}
+.nav-item:hover { background:rgba(255,255,255,0.05); }
+.nav-item.active {
+  background:linear-gradient(135deg, rgba(232,201,122,0.10), rgba(180,150,70,0.06));
+  border-color:rgba(232,201,122,0.18);
+  box-shadow:0 1px 10px rgba(200,170,80,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.nav-item-icon {
+  width:26px; height:26px; border-radius:7px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  color:var(--text3); transition:all var(--transition);
+}
+.nav-item.active .nav-item-icon {
+  background:rgba(232,201,122,0.12); border-color:rgba(232,201,122,0.26);
+  color:var(--cyan); box-shadow:0 0 8px rgba(200,170,80,0.14);
+}
+.nav-item-label { font-size:12px; color:var(--text2); transition:color var(--transition); flex:1; }
+.nav-item.active .nav-item-label { color:var(--text); font-weight:500; }
+.nav-badge {
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:700;
+  background:rgba(232,201,122,0.08); border:1px solid rgba(232,201,122,0.18);
+  color:var(--cyan); padding:1px 6px; border-radius:10px;
+}
+
+/* Sort sub-section (shown inside nav) */
+.sort-section { padding:0 10px; margin-top:2px; }
+.sort-item {
+  display:flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:var(--radius-sm); margin-bottom:2px;
+  cursor:pointer; border:1px solid transparent; transition:all var(--transition);
+}
+.sort-item:hover { background:rgba(255,255,255,0.04); }
+.sort-item.active { background:rgba(255,255,255,0.05); border-color:var(--glass-border); }
+.sort-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+.sort-item.active .sort-dot { box-shadow:0 0 5px currentColor; }
+.sort-item-label { font-size:11px; color:var(--text2); }
+.sort-item.active .sort-item-label { color:var(--text); }
+
+/* Footer */
+.sidebar-footer { margin-top:auto; padding:12px 12px; border-top:1px solid var(--glass-border); }
+.btn-new {
+  width:100%; display:flex; align-items:center; justify-content:center; gap:7px;
+  padding:9px; border-radius:var(--radius-sm);
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  background:linear-gradient(135deg, rgba(232,201,122,0.10), rgba(180,150,70,0.06));
+  border:1px solid rgba(232,201,122,0.22); color:var(--cyan);
+  cursor:pointer; transition:all 0.2s;
+  box-shadow:0 2px 10px rgba(200,170,80,0.10);
+}
+.btn-new:hover { background:linear-gradient(135deg, rgba(140,100,255,0.24), rgba(90,50,180,0.18)); box-shadow:var(--glow); }
+.copyright {
+  margin-top:8px; text-align:center;
+  font-size:9px; color:var(--text3); letter-spacing:0.1em;
+  line-height:1.6; user-select:none;
+}
+
+/* ══════════════════════════════════════
+   CENTER — content area
+   Two modes: "graph" or "contacts"
+══════════════════════════════════════ */
+.center {
+  display:flex; flex-direction:column; overflow:hidden;
+  position:relative; background:transparent;
+}
+
+/* ── Center: Graph mode ── */
+.graph-wrap {
+  flex:1; position:relative; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+#graph-svg { width:100%; height:100%; flex:1; }
+
+.graph-toolbar {
+  position:absolute; top:16px; left:50%; transform:translateX(-50%); z-index:5;
+  display:flex; gap:2px;
+  background:linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  backdrop-filter:blur(20px); border:1px solid var(--glass-border2);
+  border-radius:10px; padding:3px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.graph-tb-btn {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:600;
+  letter-spacing:0.09em; text-transform:uppercase;
+  padding:6px 15px; border-radius:7px; border:none;
+  background:transparent; color:var(--text3); cursor:pointer; transition:all 0.18s;
+}
+.graph-tb-btn.active {
+  background:linear-gradient(135deg,rgba(232,201,122,0.12),rgba(180,150,70,0.07));
+  color:var(--cyan); border:1px solid rgba(232,201,122,0.20);
+  box-shadow:0 1px 8px rgba(200,170,80,0.10), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.graph-tb-btn:hover:not(.active) { color:var(--text2); background:rgba(255,255,255,0.05); }
+
+.graph-empty {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:13px; pointer-events:none;
+}
+.graph-empty-ring {
+  width:76px; height:76px; border-radius:50%; position:relative;
+  background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.07);
+  display:flex; align-items:center; justify-content:center;
+}
+.graph-empty-ring::before { content:''; position:absolute; inset:-10px; border-radius:50%; border:1px dashed rgba(200,170,80,0.12); }
+.graph-empty-ring svg { opacity:0.32; }
+.graph-empty-text { font-size:11px; color:var(--text3); letter-spacing:0.14em; }
+.graph-hint {
+  position:absolute; bottom:13px; left:50%; transform:translateX(-50%);
+  font-size:9px; color:var(--text3); letter-spacing:0.13em; pointer-events:none;
+  background:rgba(0,0,0,0.25); backdrop-filter:blur(8px);
+  border:1px solid var(--glass-border); padding:3px 12px; border-radius:20px;
+}
+
+/* ── Center: Contacts mode ── */
+.contacts-wrap {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+.contacts-header {
+  padding:18px 24px 12px;
+  border-bottom:1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+}
+.contacts-title {
+  font-family:'Syne',sans-serif; font-size:18px; font-weight:700;
+  background:linear-gradient(135deg,#fff,rgba(180,220,255,0.6));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.contacts-count { font-size:11px; color:var(--text3); letter-spacing:0.1em; }
+
+.contacts-toolbar {
+  padding:10px 20px 10px;
+  border-bottom:1px solid var(--glass-border);
+  display:flex; align-items:center; gap:10px; flex-shrink:0;
+}
+.contacts-search-wrap { position:relative; flex:1; }
+.contacts-search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); pointer-events:none; }
+.contacts-search {
+  width:100%; padding:8px 12px 8px 32px;
+  font-family:'Noto Sans SC',sans-serif; font-size:12px;
+  background:rgba(255,255,255,0.04); border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm); color:var(--text); outline:none; transition:all 0.2s;
+}
+.contacts-search::placeholder { color:var(--text3); }
+.contacts-search:focus { border-color:rgba(232,201,122,0.30); background:rgba(255,255,255,0.07); }
+
+/* Contact cards grid */
+.contacts-grid {
+  flex:1; overflow-y:auto; padding:16px 20px;
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;
+  align-content:start;
+}
+.contacts-grid::-webkit-scrollbar { width:3px; }
+.contacts-grid::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+
+.contact-card {
+  padding:14px 14px 12px;
+  background:linear-gradient(135deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+  border:1px solid var(--glass-border); border-radius:var(--radius);
+  cursor:pointer; transition:all var(--transition); position:relative; overflow:hidden;
+  animation:cardIn 0.32s ease both;
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.contact-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+}
+.contact-card:hover {
+  background:linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  border-color:rgba(255,255,255,0.14);
+  transform:translateY(-1px);
+  box-shadow:0 4px 18px rgba(0,0,0,0.28);
+}
+.contact-card.active {
+  border-color:rgba(232,201,122,0.26);
+  background:linear-gradient(135deg, rgba(232,201,122,0.07), rgba(180,150,70,0.04));
+  box-shadow:0 0 0 1px rgba(232,201,122,0.12), 0 4px 18px rgba(200,170,80,0.08);
+}
+
+.cc-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.cc-avatar {
+  width:38px; height:38px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-size:16px; font-weight:800; position:relative;
+}
+.cc-avatar::after { content:''; position:absolute; inset:-1px; border-radius:11px; border:1px solid currentColor; opacity:0.18; }
+.cc-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cc-job  { font-size:10px; color:var(--text3); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.cc-strength-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.cc-bar-wrap { flex:1; height:3px; background:rgba(255,255,255,0.06); border-radius:2px; }
+.cc-bar { height:100%; border-radius:2px; transition:width 0.6s; }
+.cc-score { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+
+.cc-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:8px; }
+.cc-tag {
+  font-size:9px; padding:1px 7px; border-radius:10px;
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  color:var(--text2); letter-spacing:0.03em;
+}
+
+/* ── Empty contacts ── */
+.contacts-empty {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:12px;
+}
+.contacts-empty-text { font-size:12px; color:var(--text3); letter-spacing:0.12em; }
+
+/* ══════════════════════════════════════
+   RIGHT — Detail panel
+══════════════════════════════════════ */
+.detail {
+  display:flex; flex-direction:column; overflow:hidden;
+  background:linear-gradient(180deg, rgba(255,255,255,0.052) 0%, rgba(255,255,255,0.018) 100%);
+  backdrop-filter:blur(40px) saturate(180%);
+  -webkit-backdrop-filter:blur(40px) saturate(180%);
+  border-left:1px solid transparent;
+  position:relative; min-width:0;
+  transition:border-color 0.3s ease;
+}
+.detail.visible {
+  border-left-color: var(--glass-border);
+}
+.detail::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:100px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(232,201,122,0.03) 0%, transparent 100%);
+}
+
+.detail-header {
+  padding:18px 16px 14px; border-bottom:1px solid var(--glass-border);
+  display:flex; align-items:center; gap:7px; position:relative; z-index:1;
+}
+.detail-header-dot { width:5px; height:5px; border-radius:50%; background:var(--cyan); box-shadow:0 0 8px rgba(232,201,122,0.5); animation:pulse 2.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(1.6)} }
+.detail-header-title { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.14em; color:var(--text3); }
+
+/* Empty state */
+.detail-empty {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; position:relative; z-index:1;
+}
+.detail-empty-icon {
+  width:52px; height:52px; border-radius:50%;
+  background:rgba(255,255,255,0.025); border:1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:center;
+}
+.detail-empty-text { font-size:11px; color:var(--text3); letter-spacing:0.12em; text-align:center; line-height:1.6; }
+
+/* Detail filled */
+.detail-content { flex:1; overflow-y:auto; padding:16px; position:relative; z-index:1; }
+.detail-content::-webkit-scrollbar { width:3px; }
+.detail-content::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+
+.dc-hero {
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  padding:14px 0 16px; border-bottom:1px solid var(--glass-border); margin-bottom:14px;
+  animation:heroIn 0.35s ease;
+}
+@keyframes heroIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.dc-avatar-lg {
+  width:60px; height:60px; border-radius:16px; margin-bottom:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-size:24px; font-weight:800; position:relative;
+  box-shadow:0 4px 18px rgba(0,0,0,0.3);
+}
+.dc-avatar-lg::before {
+  content:''; position:absolute; inset:-3px; border-radius:19px;
+  border:1px solid currentColor; opacity:0.20; animation:spin 9s linear infinite;
+}
+.dc-avatar-lg::after {
+  content:''; position:absolute; inset:-8px; border-radius:24px;
+  border:1px dashed currentColor; opacity:0.08; animation:spin 18s linear infinite reverse;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.dc-name { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:3px; }
+.dc-job  { font-size:11px; color:var(--text2); letter-spacing:0.04em; }
+
+/* Score */
+.dc-score-display { display:flex; align-items:baseline; justify-content:center; gap:5px; margin-top:12px; margin-bottom:6px; }
+.dc-score-num {
+  font-family:'Syne',sans-serif; font-size:46px; font-weight:800; line-height:1;
+  filter:drop-shadow(0 0 14px rgba(232,201,122,0.30));
+}
+.dc-score-lbl { font-size:10px; color:var(--text3); line-height:1.6; }
+.dc-track { height:3px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin:0 0 4px; }
+.dc-fill  { height:100%; border-radius:2px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* Info grid */
+.dc-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:1px;
+  background:var(--glass-border); border-radius:var(--radius-sm);
+  overflow:hidden; margin-bottom:12px;
+}
+.dc-cell { background:rgba(255,255,255,0.022); padding:9px 11px; }
+.dc-cell.full { grid-column:1/-1; }
+.dc-lbl { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:3px; }
+.dc-val { font-size:12px; }
+
+/* Tags */
+.dc-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px; }
+.dc-tag { font-size:9px; padding:2px 8px; border-radius:10px; background:rgba(200,170,80,0.08); border:1px solid rgba(232,201,122,0.18); color:rgba(180,150,255,0.9); }
+
+/* Notes */
+.dc-notes-lbl { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:5px; }
+.dc-notes {
+  font-size:12px; line-height:1.8; color:rgba(200,220,250,0.7);
+  background:rgba(255,255,255,0.025); border-left:2px solid rgba(220,185,100,0.22);
+  padding:9px 11px; border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  white-space:pre-wrap; margin-bottom:12px;
+}
+
+/* Actions */
+.dc-actions { display:flex; gap:7px; }
+.dc-btn {
+  flex:1; font-family:'Syne',sans-serif; font-size:9px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; padding:8px;
+  border-radius:var(--radius-sm); cursor:pointer; transition:all 0.18s;
+}
+.dc-btn.edit { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border2); color:var(--text2); }
+.dc-btn.edit:hover { background:rgba(255,255,255,0.09); color:var(--text); }
+.dc-btn.del  { background:rgba(255,107,138,0.05); border:1px solid rgba(255,107,138,0.18); color:var(--rose); }
+.dc-btn.del:hover  { background:rgba(255,107,138,0.12); }
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+.overlay {
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.72); backdrop-filter:blur(12px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.22s;
+}
+.overlay.open { opacity:1; pointer-events:all; }
+.modal {
+  width:500px; max-width:96vw; max-height:90vh;
+  background:linear-gradient(155deg,rgba(14,12,10,0.99),rgba(8,7,6,0.99));
+  border:1px solid var(--glass-border2); border-radius:16px;
+  overflow:hidden; display:flex; flex-direction:column;
+  transform:translateY(20px) scale(0.97);
+  transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.overlay.open .modal { transform:translateY(0) scale(1); }
+.modal-header {
+  padding:17px 22px; border-bottom:1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(255,255,255,0.02);
+}
+.modal-title {
+  font-family:'Syne',sans-serif; font-size:15px; font-weight:700;
+  background:linear-gradient(135deg,#fff,rgba(240,225,190,0.80));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.modal-close {
+  width:26px; height:26px; border-radius:50%; border:1px solid var(--glass-border);
+  background:transparent; color:var(--text3); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all 0.18s;
+}
+.modal-close:hover { border-color:var(--rose); color:var(--rose); }
+.modal-body { padding:18px 22px; overflow-y:auto; flex:1; }
+.modal-body::-webkit-scrollbar { width:3px; }
+.modal-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.form-row.full { grid-template-columns:1fr; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-lbl { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.12em; }
+.form-input,.form-select,.form-textarea {
+  font-family:'Noto Sans SC',sans-serif; font-size:12px; padding:9px 12px;
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  color:var(--text); border-radius:var(--radius-sm); outline:none; width:100%;
+  transition:border-color 0.2s, background 0.2s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:rgba(232,201,122,0.40); background:rgba(255,255,255,0.04); }
+.form-input::placeholder,.form-textarea::placeholder { color:var(--text3); }
+.form-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='none' stroke='rgba(232,201,122,0.45)' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center; padding-right:30px; }
+.form-select option { background:#0e0c0a; }
+.form-textarea { resize:vertical; min-height:70px; }
+.strength-section { margin-bottom:12px; }
+.strength-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.strength-title { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.12em; }
+.strength-num { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; background:linear-gradient(135deg,var(--cyan),var(--teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+input[type=range] {
+  width:100%; -webkit-appearance:none; height:2px; border-radius:1px; outline:none; cursor:pointer;
+  background:linear-gradient(90deg, var(--cyan) var(--pct,44%), rgba(255,255,255,0.04) var(--pct,44%));
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
+  background:var(--bg); border:2px solid var(--cyan); box-shadow:0 0 12px rgba(232,201,122,0.45);
+  cursor:pointer; transition:box-shadow 0.2s;
+}
+input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201,122,0.7); }
+.modal-footer {
+  padding:12px 22px; border-top:1px solid var(--glass-border);
+  display:flex; justify-content:flex-end; gap:8px; background:rgba(0,0,0,0.16);
+}
+.btn-cancel {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+  padding:8px 18px; background:transparent; border:1px solid var(--glass-border); color:var(--text3);
+  border-radius:var(--radius-sm); cursor:pointer; transition:all 0.18s;
+}
+.btn-cancel:hover { color:var(--text); border-color:var(--glass-border2); }
+.btn-save {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+  padding:8px 24px; background:linear-gradient(135deg,rgba(232,201,122,0.14),rgba(180,150,70,0.08));
+  border:1px solid rgba(232,201,122,0.28); color:var(--cyan); border-radius:var(--radius-sm);
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-save:hover { box-shadow:var(--glow); background:linear-gradient(135deg,rgba(232,201,122,0.22),rgba(180,150,70,0.14)); }
+
+/* ── Bond timeline ── */
+.bond-section { margin-bottom:12px; }
+.bond-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;
+}
+.bond-lbl { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.12em; }
+.bond-add-btn {
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:600; letter-spacing:0.08em;
+  padding:3px 9px; border-radius:20px; cursor:pointer; transition:all 0.18s;
+  background:rgba(232,201,122,0.08); border:1px solid rgba(232,201,122,0.20); color:var(--cyan);
+}
+.bond-add-btn:hover { background:rgba(232,201,122,0.15); }
+
+.bond-timeline { display:flex; flex-direction:column; gap:0; }
+.bond-item {
+  display:flex; gap:10px; position:relative; padding-bottom:10px;
+}
+.bond-item:last-child { padding-bottom:0; }
+.bond-line-col { display:flex; flex-direction:column; align-items:center; flex-shrink:0; width:14px; }
+.bond-dot {
+  width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:3px;
+  background:rgba(232,201,122,0.5); border:1px solid rgba(232,201,122,0.7);
+  box-shadow:0 0 6px rgba(232,201,122,0.25);
+}
+.bond-vert {
+  width:1px; flex:1; background:rgba(232,201,122,0.12); margin-top:3px;
+}
+.bond-item:last-child .bond-vert { display:none; }
+.bond-body { flex:1; min-width:0; }
+.bond-date { font-size:9px; color:var(--text3); letter-spacing:0.06em; margin-bottom:2px; }
+.bond-text {
+  font-size:11px; line-height:1.7; color:rgba(200,220,250,0.7);
+  background:rgba(255,255,255,0.02); border-left:2px solid rgba(232,201,122,0.28);
+  padding:6px 9px; border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  word-break:break-all;
+}
+.bond-item-del {
+  font-size:10px; color:var(--text3); cursor:pointer; flex-shrink:0;
+  margin-top:2px; opacity:0; transition:opacity 0.15s; background:none; border:none; padding:0;
+}
+.bond-item:hover .bond-item-del { opacity:1; }
+.bond-item-del:hover { color:var(--rose); }
+
+.bond-input-wrap {
+  margin-top:8px; display:flex; flex-direction:column; gap:6px;
+}
+.bond-input {
+  width:100%; padding:8px 10px; font-family:'Noto Sans SC',sans-serif; font-size:11px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(232,201,122,0.22);
+  color:var(--text); border-radius:var(--radius-sm); outline:none; resize:none;
+  min-height:60px; transition:border-color 0.18s;
+}
+.bond-input:focus { border-color:rgba(232,201,122,0.45); }
+.bond-input::placeholder { color:var(--text3); }
+.bond-confirm-row { display:flex; gap:6px; justify-content:flex-end; }
+.bond-confirm-btn {
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.1em;
+  text-transform:uppercase; padding:5px 14px; border-radius:var(--radius-sm);
+  cursor:pointer; transition:all 0.18s;
+}
+.bond-confirm-btn.ok {
+  background:rgba(232,201,122,0.12); border:1px solid rgba(232,201,122,0.28); color:var(--cyan);
+}
+.bond-confirm-btn.ok:hover { background:rgba(232,201,122,0.22); }
+.bond-confirm-btn.cancel {
+  background:transparent; border:1px solid var(--glass-border); color:var(--text3);
+}
+.bond-confirm-btn.cancel:hover { color:var(--text); }
+
+/* Tooltip */
+#tooltip {
+  position:fixed; z-index:300; pointer-events:none;
+  background:rgba(6,10,20,0.96); border:1px solid var(--glass-border2);
+  border-radius:10px; padding:10px 13px; min-width:148px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4), 0 0 18px rgba(200,170,80,0.08);
+  backdrop-filter:blur(20px);
+  opacity:0; transform:translateY(5px); transition:opacity 0.14s, transform 0.14s;
+}
+#tooltip.show { opacity:1; transform:translateY(0); }
+.tt-name { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); margin-bottom:5px; }
+.tt-row  { font-size:11px; color:var(--text3); line-height:1.75; }
+.tt-row span { color:var(--text2); }
+
+/* ── Data Management Page ── */
+.data-wrap {
+  flex:1; display:flex; flex-direction:column; overflow-y:auto; padding:28px 32px;
+  gap:24px;
+}
+.data-wrap::-webkit-scrollbar { width:3px; }
+.data-wrap::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+
+.data-page-title {
+  font-family:'Syne',sans-serif; font-size:22px; font-weight:700;
+  background:linear-gradient(135deg,#fff,rgba(240,225,190,0.75));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-bottom:2px;
+}
+.data-page-sub { font-size:12px; color:var(--text3); letter-spacing:0.06em; }
+
+/* Section card */
+.data-section {
+  background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015));
+  border:1px solid var(--glass-border); border-radius:var(--radius);
+  overflow:hidden;
+}
+.data-section-header {
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--glass-border);
+  display:flex; align-items:center; gap:9px;
+}
+.data-section-icon {
+  width:28px; height:28px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(232,201,122,0.10); border:1px solid rgba(232,201,122,0.18);
+  color:var(--cyan);
+}
+.data-section-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
+.data-section-desc  { font-size:10px; color:var(--text3); margin-left:auto; letter-spacing:0.06em; }
+.data-section-body  { padding:18px; }
+
+/* Overview stats */
+.data-stats-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+}
+.data-stat-card {
+  background:rgba(255,255,255,0.025); border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm); padding:14px 12px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.data-stat-val {
+  font-family:'Syne',sans-serif; font-size:26px; font-weight:700;
+  background:linear-gradient(135deg,var(--cyan),var(--teal));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  line-height:1;
+}
+.data-stat-lbl { font-size:10px; color:var(--text3); letter-spacing:0.08em; margin-top:2px; }
+
+/* Action buttons */
+.data-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.data-btn {
+  display:flex; align-items:center; gap:8px;
+  font-family:'Syne',sans-serif; font-size:11px; font-weight:600;
+  letter-spacing:0.1em; text-transform:uppercase;
+  padding:10px 20px; border-radius:var(--radius-sm);
+  cursor:pointer; transition:all 0.2s; flex:1; justify-content:center;
+  min-width:140px;
+}
+.data-btn.export {
+  background:linear-gradient(135deg,rgba(232,201,122,0.12),rgba(180,150,70,0.07));
+  border:1px solid rgba(232,201,122,0.26); color:var(--cyan);
+}
+.data-btn.export:hover { background:linear-gradient(135deg,rgba(232,201,122,0.22),rgba(180,150,70,0.12)); box-shadow:var(--glow); }
+.data-btn.import {
+  background:rgba(255,255,255,0.04); border:1px solid var(--glass-border2); color:var(--text2);
+}
+.data-btn.import:hover { background:rgba(255,255,255,0.08); color:var(--text); }
+.data-btn svg { flex-shrink:0; }
+
+.data-btn-hint { font-size:10px; color:var(--text3); margin-top:8px; line-height:1.6; letter-spacing:0.04em; }
+
+/* Danger zone */
+.data-danger-btn {
+  display:flex; align-items:center; gap:8px;
+  font-family:'Syne',sans-serif; font-size:11px; font-weight:600;
+  letter-spacing:0.1em; text-transform:uppercase;
+  padding:10px 20px; border-radius:var(--radius-sm);
+  cursor:pointer; transition:all 0.2s;
+  background:rgba(224,112,112,0.06); border:1px solid rgba(224,112,112,0.20); color:var(--rose);
+}
+.data-danger-btn:hover { background:rgba(224,112,112,0.14); }
+.data-danger-desc { font-size:11px; color:var(--text3); line-height:1.7; margin-bottom:14px; }
+
+/* Toast notification */
+.toast {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(10px);
+  z-index:400; opacity:0; transition:all 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none;
+  background:linear-gradient(135deg,rgba(14,12,10,0.98),rgba(20,18,14,0.98));
+  border:1px solid rgba(232,201,122,0.28); border-radius:10px;
+  padding:12px 22px; display:flex; align-items:center; gap:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(232,201,122,0.08);
+  backdrop-filter:blur(20px); white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:all; }
+.toast-icon { font-size:16px; flex-shrink:0; }
+.toast-text { font-size:13px; color:var(--text); }
+.toast-text strong { color:var(--cyan); }
+
+/* ── Welcome Page ── */
+.welcome-wrap {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:48px 64px; position:relative; overflow:hidden;
+}
+
+/* 背景动态光晕 */
+.welcome-wrap::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 40%, rgba(232,201,122,0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 30% 70%, rgba(180,150,70,0.04) 0%, transparent 60%);
+}
+
+.welcome-inner {
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  max-width:560px; gap:0;
+  animation:welcomeIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes welcomeIn {
+  from { opacity:0; transform:translateY(24px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* Logo icon */
+.welcome-icon {
+  width:72px; height:72px; border-radius:20px; margin-bottom:28px;
+  background:linear-gradient(135deg, rgba(232,201,122,0.20), rgba(140,110,40,0.30));
+  border:1px solid rgba(232,201,122,0.24);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 32px rgba(200,165,80,0.15), inset 0 1px 0 rgba(255,255,255,0.10);
+  position:relative;
+}
+.welcome-icon::before {
+  content:''; position:absolute; inset:-6px; border-radius:26px;
+  border:1px solid rgba(232,201,122,0.10);
+}
+
+/* 标题 */
+.welcome-title {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:42px;
+  letter-spacing:0.14em; text-transform:uppercase; line-height:1;
+  background:linear-gradient(135deg, #fff 0%, rgba(240,225,190,0.75) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-bottom:8px;
+}
+.welcome-subtitle {
+  font-family:'Syne',sans-serif; font-size:13px; font-weight:400;
+  letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:32px;
+}
+
+/* 一句话介绍 */
+.welcome-tagline {
+  font-size:16px; line-height:1.9; color:var(--text2);
+  margin-bottom:48px; letter-spacing:0.03em;
+  font-family:'Noto Sans SC',sans-serif;
+}
+.welcome-tagline strong {
+  color:var(--cyan);
+  font-weight:500;
+}
+
+/* 功能特性列表 */
+.welcome-features {
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  width:100%; margin-bottom:48px;
+}
+.welcome-feature {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:12px 14px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.025); border:1px solid var(--glass-border);
+  text-align:left; transition:border-color 0.2s;
+}
+.welcome-feature:hover { border-color:rgba(232,201,122,0.18); }
+.welcome-feature-dot {
+  width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:5px;
+  background:var(--cyan); box-shadow:0 0 6px rgba(232,201,122,0.4);
+}
+.welcome-feature-text { font-size:12px; color:var(--text2); line-height:1.6; }
+.welcome-feature-text strong { color:var(--text); font-weight:500; display:block; margin-bottom:1px; }
+
+/* CTA 按钮 */
+.welcome-cta {
+  display:flex; align-items:center; gap:10px;
+  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+  letter-spacing:0.12em; text-transform:uppercase;
+  padding:14px 40px; border-radius:var(--radius-sm);
+  background:linear-gradient(135deg, rgba(232,201,122,0.18), rgba(180,150,70,0.10));
+  border:1px solid rgba(232,201,122,0.32); color:var(--cyan);
+  cursor:pointer; transition:all 0.22s;
+  box-shadow:0 4px 20px rgba(200,165,80,0.12);
+}
+.welcome-cta:hover {
+  background:linear-gradient(135deg, rgba(232,201,122,0.28), rgba(180,150,70,0.18));
+  box-shadow:0 4px 28px rgba(200,165,80,0.22), var(--glow);
+  transform:translateY(-1px);
+}
+.welcome-cta svg { flex-shrink:0; }
+
+.welcome-hint {
+  margin-top:16px; font-size:10px; color:var(--text3);
+  letter-spacing:0.1em;
+}
+
+/* D3 animations */
+@keyframes nodePulse { 0%,100%{opacity:0.10} 50%{opacity:0} }
+
+/* ══════════════════════════════════════
+   MOBILE — < 768px
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* 整体布局：单栏，底部留出 Tab 空间 */
+  #app {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr auto;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* 隐藏左侧边栏 */
+  .sidebar { display:none !important; }
+
+  /* 隐藏右侧详情面板（改为抽屉） */
+  .detail { display:none !important; }
+
+  /* 中间内容区全屏 */
+  .center {
+    grid-column: 1;
+    grid-row: 1;
+    overflow: hidden;
+  }
+
+  /* 图谱工具栏调整 */
+  .graph-toolbar { top: 12px; }
+  .graph-hint { display:none; }
+
+  /* 联系人列表：单列 */
+  .contacts-grid {
+    grid-template-columns: 1fr !important;
+    padding: 12px 14px;
+  }
+  .contacts-header { padding: 14px 16px 10px; }
+  .contacts-title  { font-size: 16px; }
+  .contacts-toolbar { padding: 8px 14px; }
+
+  /* 数据管理页面 */
+  .data-wrap { padding: 16px 14px; gap: 16px; }
+  .data-stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .data-actions { flex-direction: column; }
+  .data-btn { min-width: unset; }
+
+  /* 欢迎页 */
+  .welcome-wrap { padding: 32px 20px; }
+  .welcome-title { font-size: 28px; }
+  .welcome-tagline { font-size: 14px; }
+  .welcome-features { grid-template-columns: 1fr !important; }
+  .welcome-cta { padding: 12px 24px; font-size: 11px; }
+
+  /* ── 底部 Tab 导航栏 ── */
+  .mobile-tabs {
+    grid-row: 2;
+    display: flex !important;
+    align-items: stretch;
+    height: 60px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--glass-border);
+    position: relative; z-index: 20;
+  }
+  .mobile-tab {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    cursor: pointer; transition: all 0.18s;
+    border: none; background: transparent;
+    color: var(--text3); padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-tab.active { color: var(--cyan); }
+  .mobile-tab svg { flex-shrink: 0; }
+  .mobile-tab-label {
+    font-family: 'Syne', sans-serif; font-size: 9px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  /* 添加按钮特殊样式 */
+  .mobile-tab.add-btn .mobile-tab-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(232,201,122,0.18), rgba(180,150,70,0.10));
+    border: 1px solid rgba(232,201,122,0.28);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(200,165,80,0.12);
+  }
+  .mobile-tab.add-btn { color: var(--cyan); }
+
+  /* ── 移动端详情抽屉 ── */
+  .mobile-drawer {
+    position: fixed; inset: 0; z-index: 100;
+    pointer-events: none;
+  }
+  .mobile-drawer.open { pointer-events: all; }
+  .mobile-drawer-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .mobile-drawer.open .mobile-drawer-backdrop { opacity: 1; }
+  .mobile-drawer-panel {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    max-height: 85vh;
+    background: linear-gradient(180deg, rgba(18,16,12,0.99) 0%, rgba(10,9,7,0.99) 100%);
+    border-top: 1px solid var(--glass-border2);
+    border-radius: 20px 20px 0 0;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.34,1.2,0.64,1);
+  }
+  .mobile-drawer-panel::-webkit-scrollbar { display: none; }
+  .mobile-drawer.open .mobile-drawer-panel { transform: translateY(0); }
+  .mobile-drawer-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,0.15); margin: 12px auto 0;
+  }
+  .mobile-drawer-content { padding: 16px 18px 32px; }
+}
+
+/* 桌面端隐藏移动端专用元素 */
+@media (min-width: 769px) {
+  .mobile-tabs   { display: none !important; }
+  .mobile-drawer { display: none !important; }
+}
+</style>
+</head>
+
+<body>
+<div class="bg-wrap">
+  <div class="bg-aurora"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-particles" id="particles"></div>
+</div>
+
+<div id="app">
+
+  <!-- ════════════ LEFT SIDEBAR ════════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="3" stroke="var(--cyan)" stroke-width="1.4"/>
+          <circle cx="2.5" cy="3.5" r="1.8" stroke="var(--cyan)" stroke-width="1.1"/>
+          <circle cx="17.5" cy="3.5" r="1.8" stroke="var(--cyan)" stroke-width="1.1"/>
+          <circle cx="2.5" cy="16.5" r="1.8" stroke="var(--cyan)" stroke-width="1.1"/>
+          <circle cx="17.5" cy="16.5" r="1.8" stroke="var(--cyan)" stroke-width="1.1"/>
+          <line x1="10" y1="10" x2="2.5" y2="3.5" stroke="var(--cyan)" stroke-opacity=".45" stroke-width="1"/>
+          <line x1="10" y1="10" x2="17.5" y2="3.5" stroke="var(--cyan)" stroke-opacity=".45" stroke-width="1"/>
+          <line x1="10" y1="10" x2="2.5" y2="16.5" stroke="var(--cyan)" stroke-opacity=".45" stroke-width="1"/>
+          <line x1="10" y1="10" x2="17.5" y2="16.5" stroke="var(--cyan)" stroke-opacity=".45" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">NEXUS</span>
+        <span class="brand-sub">人脉图谱</span>
+      </div>
+    </div>
+
+    <div class="sidebar-stats">
+      <div class="stat-row">
+        <span class="stat-row-lbl">联系人</span>
+        <span class="stat-row-val" id="s-count">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-row-lbl">平均强度</span>
+        <span class="stat-row-val" id="s-avg">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-row-lbl">强关系人数</span>
+        <span class="stat-row-val" id="s-top">—</span>
+      </div>
+    </div>
+
+    <!-- Nav items -->
+    <div class="nav-section" style="margin-top:12px">
+      <div class="nav-section-lbl">功能</div>
+
+      <!-- Graph -->
+      <div class="nav-item active" id="nav-graph" onclick="setPage('graph')">
+        <div class="nav-item-icon">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="1.5" cy="2"   r="1.5" stroke="currentColor" stroke-width="1.1"/>
+            <circle cx="11.5" cy="2"  r="1.5" stroke="currentColor" stroke-width="1.1"/>
+            <circle cx="1.5" cy="11"  r="1.5" stroke="currentColor" stroke-width="1.1"/>
+            <circle cx="11.5" cy="11" r="1.5" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="6.5" y1="6.5" x2="1.5" y2="2"   stroke="currentColor" stroke-opacity=".5" stroke-width="1"/>
+            <line x1="6.5" y1="6.5" x2="11.5" y2="2"  stroke="currentColor" stroke-opacity=".5" stroke-width="1"/>
+            <line x1="6.5" y1="6.5" x2="1.5" y2="11"  stroke="currentColor" stroke-opacity=".5" stroke-width="1"/>
+            <line x1="6.5" y1="6.5" x2="11.5" y2="11" stroke="currentColor" stroke-opacity=".5" stroke-width="1"/>
+          </svg>
+        </div>
+        <span class="nav-item-label">关系图谱</span>
+      </div>
+
+      <!-- Contacts list -->
+      <div class="nav-item" id="nav-contacts" onclick="setPage('contacts')">
+        <div class="nav-item-icon">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M1 12c0-3.038 2.462-5.5 5.5-5.5S12 8.962 12 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="nav-item-label">联系人列表</span>
+        <span class="nav-badge" id="nav-badge">0</span>
+      </div>
+
+      <!-- Data management -->
+      <div class="nav-item" id="nav-data" onclick="setPage('data')">
+        <div class="nav-item-icon">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <ellipse cx="6.5" cy="3.5" rx="4.5" ry="2" stroke="currentColor" stroke-width="1.1"/>
+            <path d="M2 3.5v3c0 1.105 2.015 2 4.5 2s4.5-.895 4.5-2v-3" stroke="currentColor" stroke-width="1.1"/>
+            <path d="M2 6.5v3c0 1.105 2.015 2 4.5 2s4.5-.895 4.5-2v-3" stroke="currentColor" stroke-width="1.1"/>
+          </svg>
+        </div>
+        <span class="nav-item-label">数据管理</span>
+      </div>
+    </div>
+
+    <!-- Sort section (only relevant for contacts page) -->
+    <div class="nav-section" id="sort-section" style="margin-top:8px; display:none">
+      <div class="nav-section-lbl">排序方式</div>
+      <div class="sort-section">
+        <div class="sort-item active" id="sort-strength" onclick="setSort('strength')">
+          <div class="sort-dot" style="background:var(--cyan);color:var(--cyan)"></div>
+          <span class="sort-item-label">关系强度</span>
+        </div>
+        <div class="sort-item" id="sort-name" onclick="setSort('name')">
+          <div class="sort-dot" style="background:rgba(200,215,255,0.4);color:rgba(200,215,255,0.4)"></div>
+          <span class="sort-item-label">姓名</span>
+        </div>
+        <div class="sort-item" id="sort-income" onclick="setSort('income')">
+          <div class="sort-dot" style="background:var(--gold);color:var(--gold)"></div>
+          <span class="sort-item-label">收入层级</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graph sub-views (only relevant for graph page) -->
+    <div class="nav-section" id="graph-section" style="margin-top:8px">
+      <div class="nav-section-lbl">图谱视图</div>
+      <div class="sort-section">
+        <div class="sort-item active" id="gv-graph" onclick="setGraphView('graph')">
+          <div class="sort-dot" style="background:var(--cyan);color:var(--cyan)"></div>
+          <span class="sort-item-label">神经网络</span>
+        </div>
+        <div class="sort-item" id="gv-orbit" onclick="setGraphView('orbit')">
+          <div class="sort-dot" style="background:rgba(200,215,255,0.4);color:rgba(200,215,255,0.4)"></div>
+          <span class="sort-item-label">轨道层级</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-new" onclick="openModal()">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+          <line x1="5.5" y1="1" x2="5.5" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="1" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        添加联系人
+      </button>
+      <div class="copyright">© 2026 追寻天命</div>
+    </div>
+  </aside>
+
+  <!-- ════════════ CENTER ════════════ -->
+  <main class="center">
+
+    <!-- Welcome page -->
+    <div class="welcome-wrap" id="page-welcome" style="display:none">
+      <div class="welcome-inner">
+        <div class="welcome-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="5" stroke="var(--cyan)" stroke-width="1.6"/>
+            <circle cx="4" cy="6"  r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+            <circle cx="28" cy="6"  r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+            <circle cx="4" cy="26" r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+            <circle cx="28" cy="26" r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+            <line x1="16" y1="16" x2="4"  y2="6"  stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
+            <line x1="16" y1="16" x2="28" y2="6"  stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
+            <line x1="16" y1="16" x2="4"  y2="26" stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
+            <line x1="16" y1="16" x2="28" y2="26" stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
+          </svg>
+        </div>
+        <div class="welcome-title">NEXUS</div>
+        <div class="welcome-subtitle">人脉图谱</div>
+        <div class="welcome-tagline">
+          人与人之间的本质是<strong>价值交换</strong>。<br>
+          把你认识的每一个人，变成清晰可见的<strong>人脉资产</strong>。
+        </div>
+        <div class="welcome-features">
+          <div class="welcome-feature">
+            <div class="welcome-feature-dot"></div>
+            <div class="welcome-feature-text"><strong>关系可视化</strong>神经网络图 + 轨道层级图，一眼看清你的社交圈结构</div>
+          </div>
+          <div class="welcome-feature">
+            <div class="welcome-feature-dot"></div>
+            <div class="welcome-feature-text"><strong>完整联系人档案</strong>职业、收入、需求、价值，记录每段关系的核心信息</div>
+          </div>
+          <div class="welcome-feature">
+            <div class="welcome-feature-dot"></div>
+            <div class="welcome-feature-text"><strong>情分积累时间线</strong>每一次利他、每一次共同经历，都有迹可循</div>
+          </div>
+          <div class="welcome-feature">
+            <div class="welcome-feature-dot"></div>
+            <div class="welcome-feature-text"><strong>100% 本地存储</strong>数据不上传、不联网，你的人脉只属于你自己</div>
+          </div>
+        </div>
+        <button class="welcome-cta" onclick="dismissWelcome()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          开始构建我的人脉图谱
+        </button>
+        <div class="welcome-hint">点击右下角「添加联系人」即可录入第一位联系人</div>
+      </div>
+    </div>
+
+    <!-- Graph page -->
+    <div class="graph-wrap" id="page-graph">
+      <div class="graph-toolbar">
+        <button class="graph-tb-btn active" id="tb-graph" onclick="setGraphView('graph')">神经网络</button>
+        <button class="graph-tb-btn" id="tb-orbit" onclick="setGraphView('orbit')">轨道层级</button>
+      </div>
+      <svg id="graph-svg"></svg>
+      <div class="graph-empty" id="graph-empty">
+        <div class="graph-empty-ring">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="14" r="4" stroke="var(--cyan)" stroke-width="1.3"/>
+            <circle cx="3" cy="4.5"   r="2.5" stroke="var(--cyan)" stroke-width="1.1"/>
+            <circle cx="25" cy="4.5"  r="2.5" stroke="var(--cyan)" stroke-width="1.1"/>
+            <circle cx="3" cy="23.5"  r="2.5" stroke="var(--cyan)" stroke-width="1.1"/>
+            <circle cx="25" cy="23.5" r="2.5" stroke="var(--cyan)" stroke-width="1.1"/>
+            <line x1="14" y1="14" x2="3" y2="4.5"   stroke="var(--cyan)" stroke-opacity=".38" stroke-width="1"/>
+            <line x1="14" y1="14" x2="25" y2="4.5"  stroke="var(--cyan)" stroke-opacity=".38" stroke-width="1"/>
+            <line x1="14" y1="14" x2="3" y2="23.5"  stroke="var(--cyan)" stroke-opacity=".38" stroke-width="1"/>
+            <line x1="14" y1="14" x2="25" y2="23.5" stroke="var(--cyan)" stroke-opacity=".38" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="graph-empty-text">添加联系人以激活图谱</div>
+      </div>
+      <div class="graph-hint">拖拽节点 · 滚轮缩放 · 点击查看</div>
+    </div>
+
+    <!-- Contacts page -->
+    <div class="contacts-wrap" id="page-contacts" style="display:none">
+      <div class="contacts-header">
+        <div class="contacts-title">联系人列表</div>
+        <div class="contacts-count" id="contacts-count">0 位联系人</div>
+      </div>
+      <div class="contacts-toolbar">
+        <div class="contacts-search-wrap">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="5" cy="5" r="3.5" stroke="rgba(180,210,255,0.3)" stroke-width="1.2"/>
+            <line x1="8" y1="8" x2="11.5" y2="11.5" stroke="rgba(180,210,255,0.3)" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <input class="contacts-search" id="contacts-search" placeholder="搜索姓名、职位、行业…" oninput="renderContacts()">
+        </div>
+      </div>
+      <div class="contacts-grid" id="contacts-grid"></div>
+    </div>
+
+    <!-- Data management page -->
+    <div class="data-wrap" id="page-data" style="display:none">
+      <div>
+        <div class="data-page-title">数据管理</div>
+        <div class="data-page-sub">备份、恢复、管理你的人脉数据</div>
+      </div>
+
+      <!-- Overview -->
+      <div class="data-section">
+        <div class="data-section-header">
+          <div class="data-section-icon">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <rect x="1" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
+              <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
+              <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
+              <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+          </div>
+          <span class="data-section-title">数据概览</span>
+        </div>
+        <div class="data-section-body">
+          <div class="data-stats-grid" id="data-stats-grid"></div>
+        </div>
+      </div>
+
+      <!-- Backup & Restore -->
+      <div class="data-section">
+        <div class="data-section-header">
+          <div class="data-section-icon">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M6.5 1v7M4 6l2.5 2.5L9 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 10.5h11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="data-section-title">备份与恢复</span>
+          <span class="data-section-desc">数据仅存于本地设备</span>
+        </div>
+        <div class="data-section-body">
+          <div class="data-actions">
+            <button class="data-btn export" onclick="exportData()">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <path d="M6.5 1v7M4 6l2.5 2.5L9 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M1 10.5h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              导出备份
+            </button>
+            <button class="data-btn import" onclick="document.getElementById('import-input').click()">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <path d="M6.5 8.5V1.5M4 4l2.5-2.5L9 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M1 10.5h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              导入恢复
+            </button>
+            <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
+          </div>
+          <div class="data-btn-hint">
+            · 导出：将所有数据保存为 .json 文件到本地<br>
+            · 导入：选择备份文件，与现有数据合并（相同联系人以备份为准）
+          </div>
+        </div>
+      </div>
+
+      <!-- Clear demo data -->
+      <div class="data-section" id="demo-section" style="display:none">
+        <div class="data-section-header">
+          <div class="data-section-icon" style="background:rgba(232,201,122,0.08);border-color:rgba(232,201,122,0.16);color:var(--cyan)">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.1"/>
+              <line x1="4.5" y1="6.5" x2="8.5" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="data-section-title">示例数据</span>
+        </div>
+        <div class="data-section-body">
+          <div class="data-danger-desc" style="color:var(--text3)">当前数据为演示用示例，你可以清除它们并开始录入真实的人脉。</div>
+          <button class="data-btn import" onclick="clearDemoData()" style="max-width:200px;flex:none">
+            清除示例数据
+          </button>
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="data-section">
+        <div class="data-section-header">
+          <div class="data-section-icon" style="background:rgba(224,112,112,0.10);border-color:rgba(224,112,112,0.20);color:var(--rose)">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M6.5 1L12 11.5H1L6.5 1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+              <line x1="6.5" y1="5" x2="6.5" y2="8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="6.5" cy="9.5" r="0.6" fill="currentColor"/>
+            </svg>
+          </div>
+          <span class="data-section-title" style="color:var(--rose)">危险区域</span>
+        </div>
+        <div class="data-section-body">
+          <div class="data-danger-desc">清空后所有联系人数据将永久删除，操作不可撤销。建议在清空前先导出备份。</div>
+          <button class="data-danger-btn" onclick="clearAllData()">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M2 3.5h9M5 3.5V2h3v1.5M10.5 3.5l-.5 8h-7l-.5-8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            清空所有数据
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ════════════ RIGHT DETAIL ════════════ -->
+  <aside class="detail">
+    <div class="detail-header">
+      <div class="detail-header-dot"></div>
+      <span class="detail-header-title">详细信息</span>
+    </div>
+    <div id="detail-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+      <div class="detail-empty">
+        <div class="detail-empty-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="7.5" r="3.5" stroke="rgba(180,210,255,0.2)" stroke-width="1.3"/>
+            <path d="M2 19c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="rgba(180,210,255,0.2)" stroke-width="1.3"/>
+          </svg>
+        </div>
+        <div class="detail-empty-text">点击联系人<br>查看详细信息</div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ════════════ MOBILE BOTTOM TABS ════════════ -->
+<nav class="mobile-tabs" style="display:none">
+  <button class="mobile-tab active" id="mtab-graph" onclick="mobileSetPage('graph')">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.4"/>
+      <circle cx="2.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="17.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="2.5" cy="16.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="17.5" cy="16.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+      <line x1="10" y1="10" x2="2.5" y2="3.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
+      <line x1="10" y1="10" x2="17.5" y2="3.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
+      <line x1="10" y1="10" x2="2.5" y2="16.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
+      <line x1="10" y1="10" x2="17.5" y2="16.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
+    </svg>
+    <span class="mobile-tab-label">图谱</span>
+  </button>
+  <button class="mobile-tab" id="mtab-contacts" onclick="mobileSetPage('contacts')">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.4"/>
+      <path d="M2 18c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <span class="mobile-tab-label">联系人</span>
+  </button>
+  <button class="mobile-tab add-btn" onclick="openModal()">
+    <div class="mobile-tab-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <line x1="8" y1="2" x2="8" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="mobile-tab-label">添加</span>
+  </button>
+  <button class="mobile-tab" id="mtab-data" onclick="mobileSetPage('data')">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <ellipse cx="10" cy="5.5" rx="6.5" ry="2.5" stroke="currentColor" stroke-width="1.3"/>
+      <path d="M3.5 5.5v4c0 1.38 2.91 2.5 6.5 2.5s6.5-1.12 6.5-2.5v-4" stroke="currentColor" stroke-width="1.3"/>
+      <path d="M3.5 9.5v4c0 1.38 2.91 2.5 6.5 2.5s6.5-1.12 6.5-2.5v-4" stroke="currentColor" stroke-width="1.3"/>
+    </svg>
+    <span class="mobile-tab-label">数据</span>
+  </button>
+</nav>
+
+<!-- ════════════ MOBILE DETAIL DRAWER ════════════ -->
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="mobile-drawer-backdrop" onclick="closeMobileDrawer()"></div>
+  <div class="mobile-drawer-panel">
+    <div class="mobile-drawer-handle"></div>
+    <div class="mobile-drawer-content" id="mobile-drawer-content"></div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="toast" class="toast">
+  <span class="toast-icon" id="toast-icon">✓</span>
+  <span class="toast-text" id="toast-text"></span>
+</div>
+
+<div id="tooltip">
+  <div class="tt-name" id="tt-name"></div>
+  <div id="tt-body"></div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">添加联系人</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fid">
+      <div class="form-row">
+        <div class="form-group"><label class="form-lbl">姓名 *</label><input class="form-input" id="f-name" placeholder="张三"></div>
+        <div class="form-group"><label class="form-lbl">职位</label><input class="form-input" id="f-job" placeholder="投资总监"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-lbl">行业</label>
+          <select class="form-select" id="f-industry">
+            <option value="">— 选择 —</option>
+            <option>金融 / 投资</option><option>科技 / 互联网</option><option>房地产</option>
+            <option>贸易 / 制造</option><option>医疗 / 健康</option><option>教育</option>
+            <option>政府 / 公务</option><option>传媒 / 创意</option><option>法律</option><option>其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">收入层级</label>
+          <select class="form-select" id="f-income">
+            <option value="0">— 不填 —</option>
+            <option value="1">L1 · &lt;10万/年</option><option value="2">L2 · 10–30万/年</option>
+            <option value="3">L3 · 30–100万/年</option><option value="4">L4 · 100–500万/年</option>
+            <option value="5">L5 · &gt;500万/年</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-lbl">认识方式</label>
+          <select class="form-select" id="f-how">
+            <option value="">— 选择 —</option>
+            <option>同学</option><option>同事</option><option>朋友介绍</option>
+            <option>家庭关系</option><option>商业合作</option><option>社群活动</option><option>其他</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-lbl">家庭状况</label><input class="form-input" id="f-family" placeholder="已婚，2子"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-lbl">电话</label><input class="form-input" id="f-phone" placeholder="138 0000 0000"></div>
+        <div class="form-group"><label class="form-lbl">标签（逗号分隔）</label><input class="form-input" id="f-tags" placeholder="高净值, 资源丰富, 待跟进"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="form-lbl">他的需求（他需要什么）</label><textarea class="form-textarea" id="f-need" style="min-height:56px" placeholder="融资渠道、法律顾问、优质项目…"></textarea></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="form-lbl">我的价值（我能提供什么）</label><textarea class="form-textarea" id="f-value" style="min-height:56px" placeholder="资源对接、技术支持、行业信息…"></textarea></div>
+      </div>
+      <div class="strength-section">
+        <div class="strength-header">
+          <div class="strength-title">关系强度</div>
+          <div class="strength-num" id="strength-num">5</div>
+        </div>
+        <input type="range" min="1" max="10" value="5" id="f-strength"
+          oninput="this.style.setProperty('--pct',(this.value-1)/9*100+'%');document.getElementById('strength-num').textContent=this.value">
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="form-lbl">备注</label><textarea class="form-textarea" id="f-notes" placeholder="关系脉络、合作潜力、跟进计划…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="savePerson()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+const _stored = localStorage.getItem('nx4_people');
+const _isFirstTime = !_stored;  // 从未存过数据 = 全新用户
+let people = _stored ? JSON.parse(_stored) : [];
+let selected = null;   // selected person id
+let page     = 'graph'; // 'graph' | 'contacts'
+let graphView= 'graph'; // 'graph' | 'orbit'
+let sortKey  = 'strength';
+let sim      = null;
+
+const INCOME_LBL = ['','<10万','10–30万','30–100万','100–500万','>500万'];
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate())
+       +' '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+const IND_COLOR  = {
+  '金融 / 投资':'#ffc247','科技 / 互联网':'#60a5fa','房地产':'#ff6b8a',
+  '贸易 / 制造':'#00ffd5','医疗 / 健康':'#4ade80','教育':'#a78bfa',
+  '政府 / 公务':'#60a5fa','传媒 / 创意':'#f472b6','法律':'#fb923c','其他':'#94a3b8'
+};
+const getColor = p => IND_COLOR[p.industry] || '#e8c97a';
+const genId    = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
+const save     = () => localStorage.setItem('nx4_people', JSON.stringify(people));
+
+function getDemo() {
+  return [
+    {id:'d1',name:'李明',job:'合伙人',industry:'金融 / 投资',income:4,how:'朋友介绍',family:'已婚，1子',tags:['LP资源','高净值'],notes:'某PE合伙人，有大量项目资源，值得长期维护。',strength:9},
+    {id:'d2',name:'王芳',job:'产品总监',industry:'科技 / 互联网',income:3,how:'同学',family:'未婚',tags:['技术背景','创业经历'],notes:'清华同学，现在字节，负责百万DAU产品线。',strength:7},
+    {id:'d3',name:'张建国',job:'律师',industry:'法律',income:3,how:'商业合作',family:'已婚，2子',tags:['并购','知识产权'],notes:'有自己律所，主做并购和知识产权。',strength:5},
+    {id:'d4',name:'陈晓',job:'主任医师',industry:'医疗 / 健康',income:3,how:'同事家属',family:'已婚，1女',tags:['医疗资源'],notes:'三甲医院主任医师。',strength:4},
+    {id:'d5',name:'刘伟',job:'开发商',industry:'房地产',income:5,how:'社群活动',family:'离异，1子',tags:['高净值','土地资源'],notes:'多城持有商业地产。',strength:6},
+    {id:'d6',name:'赵敏',job:'创始人',industry:'传媒 / 创意',income:3,how:'朋友介绍',family:'未婚',tags:['媒体资源','IP运营'],notes:'运营50万粉丝账号矩阵。',strength:5},
+  ];
+}
+
+// ── Particles ─────────────────────────────────────────────────
+(() => {
+  const w = document.getElementById('particles');
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement('div'); el.className = 'particle';
+    const s  = 1.5 + Math.random()*2.5;
+    el.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${16+Math.random()*20}s;animation-delay:${-Math.random()*28}s`;
+    w.appendChild(el);
+  }
+})();
+
+// ── Page switching ─────────────────────────────────────────────
+// ── Welcome page ──────────────────────────────────────────────
+function showWelcome() {
+  // 隐藏所有页面，显示欢迎页，隐藏侧边栏子菜单
+  ['page-graph','page-contacts','page-data'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  document.getElementById('page-welcome').style.display = 'flex';
+  document.getElementById('sort-section').style.display  = 'none';
+  document.getElementById('graph-section').style.display = 'none';
+  // 清除所有 nav active
+  ['nav-graph','nav-contacts','nav-data'].forEach(id=>{
+    document.getElementById(id)?.classList.remove('active');
+  });
+}
+
+function dismissWelcome() {
+  // 关闭欢迎页，进入关系图谱
+  document.getElementById('page-welcome').style.display = 'none';
+  setPage('graph');
+  // 打开添加联系人弹窗，引导第一步
+  setTimeout(()=>openModal(), 400);
+}
+
+function setPage(p) {
+  page = p;
+  // nav highlight
+  document.getElementById('nav-contacts').classList.toggle('active', p==='contacts');
+  document.getElementById('nav-graph').classList.toggle('active', p==='graph');
+  document.getElementById('nav-data').classList.toggle('active', p==='data');
+  // show/hide center panels
+  document.getElementById('page-welcome').style.display  = 'none';
+  document.getElementById('page-graph').style.display    = p==='graph'    ? 'flex' : 'none';
+  document.getElementById('page-contacts').style.display = p==='contacts' ? 'flex' : 'none';
+  document.getElementById('page-data').style.display     = p==='data'     ? 'flex' : 'none';
+  // show/hide sidebar sub-sections
+  document.getElementById('sort-section').style.display  = p==='contacts' ? 'block' : 'none';
+  document.getElementById('graph-section').style.display = p==='graph'    ? 'block' : 'none';
+  // Clear selection and collapse detail panel on page switch
+  selected = null;
+  renderDetail();
+  if (p === 'graph') { renderGraph(); }
+  if (p === 'contacts') { renderContacts(); }
+  if (p === 'data') { renderDataPage(); }
+}
+
+// ── Graph sub-view ─────────────────────────────────────────────
+function setGraphView(v) {
+  graphView = v;
+  document.getElementById('gv-graph').classList.toggle('active', v==='graph');
+  document.getElementById('gv-orbit').classList.toggle('active', v==='orbit');
+  document.getElementById('tb-graph').classList.toggle('active', v==='graph');
+  document.getElementById('tb-orbit').classList.toggle('active', v==='orbit');
+  renderGraph();
+}
+
+// ── Sort ───────────────────────────────────────────────────────
+function setSort(k) {
+  sortKey = k;
+  ['strength','name','income'].forEach(id => document.getElementById('sort-'+id).classList.toggle('active', id===k));
+  renderContacts();
+}
+
+// ── Stats ──────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('s-count').textContent  = people.length;
+  document.getElementById('nav-badge').textContent = people.length;
+  if (!people.length) { ['s-avg','s-top'].forEach(id=>document.getElementById(id).textContent='—'); return; }
+  document.getElementById('s-avg').textContent = (people.reduce((s,p)=>s+p.strength,0)/people.length).toFixed(1);
+  document.getElementById('s-top').textContent = people.filter(p=>p.strength>=8).length;
+}
+
+// ── Modal ──────────────────────────────────────────────────────
+function openModal(id) {
+  if (id) {
+    const p = people.find(x=>x.id===id);
+    document.getElementById('modal-title').textContent = '编辑联系人';
+    document.getElementById('fid').value       = p.id;
+    document.getElementById('f-name').value    = p.name;
+    document.getElementById('f-job').value     = p.job||'';
+    document.getElementById('f-industry').value= p.industry||'';
+    document.getElementById('f-income').value  = p.income||0;
+    document.getElementById('f-how').value     = p.how||'';
+    document.getElementById('f-family').value  = p.family||'';
+    document.getElementById('f-phone').value   = p.phone||'';
+    document.getElementById('f-tags').value    = (p.tags||[]).join(', ');
+    document.getElementById('f-need').value    = p.need||'';
+    document.getElementById('f-value').value   = p.value||'';
+    document.getElementById('f-notes').value   = p.notes||'';
+    const s = document.getElementById('f-strength');
+    s.value = p.strength; s.style.setProperty('--pct',(p.strength-1)/9*100+'%');
+    document.getElementById('strength-num').textContent = p.strength;
+  } else {
+    document.getElementById('modal-title').textContent = '添加联系人';
+    document.getElementById('fid').value = '';
+    ['f-name','f-job','f-family','f-phone','f-tags','f-need','f-value','f-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-industry').value = '';
+    document.getElementById('f-income').value   = 0;
+    document.getElementById('f-how').value      = '';
+    const s = document.getElementById('f-strength');
+    s.value = 5; s.style.setProperty('--pct','44.4%');
+    document.getElementById('strength-num').textContent = '5';
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+
+function savePerson() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { document.getElementById('f-name').style.borderColor='var(--rose)'; return; }
+  document.getElementById('f-name').style.borderColor = '';
+  const id   = document.getElementById('fid').value || genId();
+  const tags = document.getElementById('f-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const p    = {
+    id, name,
+    job:      document.getElementById('f-job').value.trim(),
+    industry: document.getElementById('f-industry').value,
+    income:   parseInt(document.getElementById('f-income').value)||0,
+    how:      document.getElementById('f-how').value,
+    family:   document.getElementById('f-family').value.trim(),
+    phone:    document.getElementById('f-phone').value.trim(),
+    tags, 
+    need:     document.getElementById('f-need').value.trim(),
+    value:    document.getElementById('f-value').value.trim(),
+    bonds:    (people.find(x=>x.id===id)||{}).bonds || [],
+    notes:    document.getElementById('f-notes').value.trim(),
+    strength: parseInt(document.getElementById('f-strength').value)
+  };
+  const now = new Date().toISOString();
+  const existing = people.find(x=>x.id===id);
+  p.createdAt  = existing?.createdAt  || now;   // 新建时记录，编辑时保留原值
+  p.updatedAt  = now;                            // 每次保存都更新
+  const idx = people.findIndex(x=>x.id===id);
+  if (idx>=0) people[idx]=p; else people.push(p);
+  save(); closeModal(); render();
+}
+
+// ── Bond timeline ──────────────────────────────────────────────
+function toggleBondInput(pid) {
+  const wrap = document.getElementById('bond-input-'+pid);
+  if (!wrap) return;
+  const isHidden = wrap.style.display === 'none';
+  wrap.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) {
+    document.getElementById('bond-text-'+pid)?.focus();
+  } else {
+    const ta = document.getElementById('bond-text-'+pid);
+    if (ta) ta.value = '';
+  }
+}
+
+function saveBond(pid) {
+  const ta = document.getElementById('bond-text-'+pid);
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) return;
+  const p = people.find(x=>x.id===pid);
+  if (!p) return;
+  if (!p.bonds) p.bonds = [];
+  const now = new Date();
+  const date = now.getFullYear()+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0');
+  p.bonds.push({ date, text });
+  save();
+  // Re-render detail in place without losing scroll
+  const detail = document.querySelector('.detail-content');
+  const scrollTop = detail ? detail.scrollTop : 0;
+  renderDetail();
+  requestAnimationFrame(()=>{
+    const d = document.querySelector('.detail-content');
+    if (d) d.scrollTop = scrollTop;
+  });
+}
+
+function deleteBond(pid, idx) {
+  const p = people.find(x=>x.id===pid);
+  if (!p || !p.bonds) return;
+  p.bonds.splice(idx, 1);
+  save();
+  const detail = document.querySelector('.detail-content');
+  const scrollTop = detail ? detail.scrollTop : 0;
+  renderDetail();
+  requestAnimationFrame(()=>{
+    const d = document.querySelector('.detail-content');
+    if (d) d.scrollTop = scrollTop;
+  });
+}
+
+function deletePerson(id) {
+  if (!confirm('确认删除？')) return;
+  people  = people.filter(p=>p.id!==id);
+  selected = null; save(); render();
+}
+
+// ── Select person ──────────────────────────────────────────────
+// ── Detail panel ───────────────────────────────────────────────
+function renderDetail() {
+  const wrap = document.getElementById('detail-body');
+  if (!selected) {
+    // Collapse detail panel
+    const app = document.getElementById('app');
+    app.style.gridTemplateColumns = 'var(--sidebar-w) 1fr 0px';
+    document.querySelector('.detail').classList.remove('visible');
+    wrap.innerHTML = '';
+    if (page === 'graph') {
+      app.addEventListener('transitionend', function onEnd(e) {
+        if (e.propertyName === 'grid-template-columns') {
+          app.removeEventListener('transitionend', onEnd);
+          renderGraph();
+        }
+      });
+    }
+    return;
+  }
+  const p = people.find(x=>x.id===selected);
+  if (!p) { selected=null; return renderDetail(); }
+  const c = getColor(p);
+  wrap.innerHTML = `<div class="detail-content">
+    <div class="dc-hero">
+      <div class="dc-avatar-lg" style="background:${c}18;color:${c}">${p.name[0]}</div>
+      <div class="dc-name">${p.name}</div>
+      <div class="dc-job">${[p.job,p.industry].filter(Boolean).join(' · ')||'职业未知'}</div>
+      <div class="dc-score-display">
+        <div class="dc-score-num" style="background:linear-gradient(135deg,${c},#00ffd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${p.strength}</div>
+        <div class="dc-score-lbl">/ 10<br>关系强度</div>
+      </div>
+      <div class="dc-track" style="width:100%"><div class="dc-fill" style="width:${p.strength*10}%;background:linear-gradient(90deg,${c},#00ffd5)"></div></div>
+    </div>
+    <div class="dc-grid">
+      <div class="dc-cell"><div class="dc-lbl">收入层级</div><div class="dc-val">${p.income?'L'+p.income+' '+INCOME_LBL[p.income]:'未填写'}</div></div>
+      <div class="dc-cell"><div class="dc-lbl">认识方式</div><div class="dc-val">${p.how||'未填写'}</div></div>
+      <div class="dc-cell full"><div class="dc-lbl">家庭状况</div><div class="dc-val">${p.family||'未填写'}</div></div>
+      <div class="dc-cell full"><div class="dc-lbl">电话</div><div class="dc-val">${p.phone||'未填写'}</div></div>
+      <div class="dc-cell"><div class="dc-lbl">创建时间</div><div class="dc-val" style="font-size:11px">${p.createdAt ? fmtDate(p.createdAt) : '—'}</div></div>
+      <div class="dc-cell"><div class="dc-lbl">最后更新</div><div class="dc-val" style="font-size:11px">${p.updatedAt ? fmtDate(p.updatedAt) : '—'}</div></div>
+    </div>
+    ${(p.tags||[]).length?`<div class="dc-tags">${p.tags.map(t=>`<span class="dc-tag">${t}</span>`).join('')}</div>`:''}
+    ${p.need?`<div class="dc-notes-lbl">他的需求</div><div class="dc-notes">${p.need}</div>`:''}
+    ${p.value?`<div class="dc-notes-lbl">我的价值</div><div class="dc-notes" style="border-left-color:rgba(232,201,122,0.40)">${p.value}</div>`:''}
+    <div class="bond-section">
+      <div class="bond-header">
+        <div class="bond-lbl">情分积累</div>
+        <button class="bond-add-btn" onclick="toggleBondInput('${p.id}')">＋ 添加记录</button>
+      </div>
+      <div class="bond-timeline" id="bond-list-${p.id}">
+        ${(p.bonds||[]).length===0?`<div style="font-size:11px;color:var(--text3);letter-spacing:0.06em">暂无记录</div>`:(p.bonds||[]).slice().reverse().map((b,i)=>`
+        <div class="bond-item">
+          <div class="bond-line-col"><div class="bond-dot"></div><div class="bond-vert"></div></div>
+          <div class="bond-body">
+            <div class="bond-date">${b.date}</div>
+            <div class="bond-text">${b.text}</div>
+          </div>
+          <button class="bond-item-del" onclick="deleteBond('${p.id}',${(p.bonds||[]).length-1-i})" title="删除">×</button>
+        </div>`).join('')}
+      </div>
+      <div class="bond-input-wrap" id="bond-input-${p.id}" style="display:none">
+        <textarea class="bond-input" id="bond-text-${p.id}" placeholder="记录这次的情分…"></textarea>
+        <div class="bond-confirm-row">
+          <button class="bond-confirm-btn cancel" onclick="toggleBondInput('${p.id}')">取消</button>
+          <button class="bond-confirm-btn ok" onclick="saveBond('${p.id}')">保存</button>
+        </div>
+      </div>
+    </div>
+    ${p.notes?`<div class="dc-notes-lbl">备注</div><div class="dc-notes">${p.notes}</div>`:''}
+    <div class="dc-actions">
+      <button class="dc-btn edit" onclick="openModal('${p.id}')">编辑</button>
+      <button class="dc-btn del"  onclick="deletePerson('${p.id}')">删除</button>
+    </div>
+  </div>`;
+}
+
+// ── Contacts page ──────────────────────────────────────────────
+function getSorted() {
+  const q = (document.getElementById('contacts-search')?.value||'').toLowerCase();
+  let list = people.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    (p.job||'').toLowerCase().includes(q) ||
+    (p.industry||'').toLowerCase().includes(q)
+  );
+  if (sortKey==='strength') list.sort((a,b)=>b.strength-a.strength);
+  else if (sortKey==='name') list.sort((a,b)=>a.name.localeCompare(b.name,'zh'));
+  else list.sort((a,b)=>b.income-a.income);
+  return list;
+}
+
+function renderContacts() {
+  const list = getSorted();
+  document.getElementById('contacts-count').textContent = `${list.length} 位联系人`;
+  const grid = document.getElementById('contacts-grid');
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="contacts-empty" style="grid-column:1/-1"><div class="contacts-empty-text">暂无联系人，点击左下角添加</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map((p, i) => {
+    const c    = getColor(p);
+    const tags = (p.tags||[]).slice(0,3).map(t=>`<span class="cc-tag">${t}</span>`).join('');
+    return `<div class="contact-card${selected===p.id?' active':''}" onclick="selectPerson('${p.id}')" style="animation-delay:${i*0.03}s">
+      <div class="cc-top">
+        <div class="cc-avatar" style="background:${c}18;color:${c}">${p.name[0]}</div>
+        <div style="flex:1;min-width:0">
+          <div class="cc-name">${p.name}</div>
+          <div class="cc-job">${p.job||p.industry||'—'}</div>
+        </div>
+      </div>
+      <div class="cc-strength-row">
+        <div class="cc-bar-wrap"><div class="cc-bar" style="width:${p.strength*10}%;background:${c}"></div></div>
+        <div class="cc-score" style="color:${c}">${p.strength}</div>
+      </div>
+      ${tags?`<div class="cc-tags">${tags}</div>`:''}
+      ${p.updatedAt?`<div style="font-size:9px;color:var(--text3);margin-top:6px;letter-spacing:0.05em">更新 ${fmtDate(p.updatedAt).slice(0,10)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── Graph ──────────────────────────────────────────────────────
+function renderGraph() {
+  if (sim) sim.stop();
+  const svg = d3.select('#graph-svg'); svg.selectAll('*').remove();
+  document.getElementById('graph-empty').style.display = people.length ? 'none' : 'flex';
+  if (!people.length) return;
+
+  const W = document.getElementById('page-graph').offsetWidth;
+  const H = document.getElementById('page-graph').offsetHeight;
+
+  const defs = svg.append('defs');
+  const flt  = defs.append('filter').attr('id','glow').attr('x','-60%').attr('y','-60%').attr('width','220%').attr('height','220%');
+  flt.append('feGaussianBlur').attr('stdDeviation','5').attr('result','blur');
+  const fm = flt.append('feMerge');
+  fm.append('feMergeNode').attr('in','blur');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  people.forEach(p => {
+    const c = getColor(p), g = defs.append('radialGradient').attr('id','rg'+p.id);
+    g.append('stop').attr('offset','0%').attr('stop-color',c).attr('stop-opacity',0.5);
+    g.append('stop').attr('offset','100%').attr('stop-color',c).attr('stop-opacity',0.02);
+  });
+  const mg = defs.append('radialGradient').attr('id','rgme');
+  mg.append('stop').attr('offset','0%').attr('stop-color','#e8c97a').attr('stop-opacity',0.60);
+  mg.append('stop').attr('offset','100%').attr('stop-color','#e8c97a').attr('stop-opacity',0.02);
+
+  const g = svg.append('g');
+  svg.call(d3.zoom().scaleExtent([0.15,5]).on('zoom', e=>g.attr('transform',e.transform)));
+
+  // Click SVG background (not a node) to dismiss detail
+  svg.on('click', (e) => {
+    const clickedNode = e.target.closest && e.target.closest('.node-group');
+    if (!clickedNode && selected) { selected = null; renderDetail(); }
+  });
+
+  if (graphView==='graph') doForce(g,W,H);
+  else doOrbit(g,W,H);
+}
+
+function doForce(g,W,H) {
+  const nodes = [{id:'__me__',name:'我',isMe:true,x:W/2,y:H/2,fx:W/2,fy:H/2}, ...people.map(p=>({...p,isMe:false}))];
+  const links = people.map(p=>({source:'__me__',target:p.id,str:p.strength}));
+
+  sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d=>d.id).distance(d=>280-d.str*18).strength(0.55))
+    .force('charge', d3.forceManyBody().strength(-360))
+    .force('collision', d3.forceCollide(d=>d.isMe?50:26+d.strength))
+    .force('center', d3.forceCenter(W/2,H/2).strength(0.06));
+
+  const link = g.append('g').selectAll('line').data(links).join('line')
+    .attr('stroke', d=>{const p=people.find(x=>x.id===(typeof d.target==='object'?d.target.id:d.target));return p?getColor(p):'#e8c97a';})
+    .attr('stroke-width', d=>d.str/4.5)
+    .attr('stroke-opacity', d=>0.08+d.str*0.022);
+
+  const node = g.append('g').selectAll('g').data(nodes).join('g').attr('class','node-group').style('cursor','pointer')
+    .call(d3.drag()
+      .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',  (e,d)=>{if(!e.active)sim.alphaTarget(0);if(!d.isMe){d.fx=null;d.fy=null;}}));
+
+  node.each(function(d) {
+    const el=d3.select(this), c=d.isMe?'#a78bfa':getColor(d), r=d.isMe?26:10+d.strength;
+    el.append('circle').attr('r',r+8).attr('fill','none').attr('stroke',c).attr('stroke-width',1).attr('stroke-opacity',0.1)
+      .style('animation',`nodePulse ${2.5+Math.random()*2}s ${Math.random()*2}s ease-in-out infinite`)
+      .style('transform-origin','center');
+    el.append('circle').attr('r',r+1.5).attr('fill','none').attr('stroke',c).attr('stroke-width',0.5).attr('stroke-opacity',0.25);
+    el.append('circle').attr('r',r).attr('fill',`url(#rg${d.isMe?'me':d.id})`)
+      .attr('stroke',c).attr('stroke-width',d.isMe?1.5:1).attr('stroke-opacity',0.7)
+      .attr('filter','url(#glow)').attr('class','node-main').attr('data-id',d.id);
+    el.append('text').attr('text-anchor','middle').attr('dy','0.35em')
+      .attr('font-family','Syne,sans-serif').attr('font-weight','700')
+      .attr('font-size',d.isMe?13:10).attr('fill',c).attr('pointer-events','none')
+      .text(d.isMe?'我':d.name.length>2?d.name.slice(0,2):d.name);
+    if (!d.isMe) {
+      el.append('circle').attr('r',7).attr('cx',r-1).attr('cy',-(r-1))
+        .attr('fill','rgba(5,7,13,0.9)').attr('stroke',c).attr('stroke-width',0.5).attr('stroke-opacity',0.5);
+      el.append('text').attr('x',r-1).attr('y',-(r-1)).attr('dy','0.35em')
+        .attr('text-anchor','middle').attr('font-family','Syne,sans-serif')
+        .attr('font-size',7).attr('fill',c).attr('font-weight','700').attr('pointer-events','none').text(d.strength);
+    }
+  });
+
+  node.on('click',(e,d)=>{if(!d.isMe) selectPerson(d.id);})
+      .on('mousemove',(e,d)=>{if(!d.isMe) showTip(e,d);})
+      .on('mouseleave', hideTip);
+
+  sim.on('tick',()=>{
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
+  });
+}
+
+function doOrbit(g,W,H) {
+  const cx=W/2, cy=H/2;
+  const rings=[{lbl:'核心圈',min:8,r:130},{lbl:'重要圈',min:5,r:235},{lbl:'普通圈',min:1,r:340}];
+
+  rings.forEach(ring=>{
+    g.append('circle').attr('cx',cx).attr('cy',cy).attr('r',ring.r)
+      .attr('fill','none').attr('stroke','rgba(232,201,122,0.30)').attr('stroke-dasharray','6,5').attr('stroke-width',1.2);
+    g.append('text').attr('x',cx+ring.r-6).attr('y',cy).attr('dy','0.35em')
+      .attr('font-size',11).attr('font-family','Syne,sans-serif').attr('fill','rgba(220,190,110,0.80)')
+      .attr('font-weight','600').attr('letter-spacing','0.1em').text(ring.lbl);
+  });
+
+  const me=g.append('g').attr('transform',`translate(${cx},${cy})`);
+  me.append('circle').attr('r',30).attr('fill','rgba(232,201,122,0.07)').attr('stroke','rgba(232,201,122,0.45)').attr('stroke-width',1.5);
+  me.append('circle').attr('r',37).attr('fill','none').attr('stroke','rgba(232,201,122,0.14)').attr('stroke-dasharray','4,5')
+    .style('animation','spin 14s linear infinite').style('transform-origin','center');
+  me.append('text').attr('text-anchor','middle').attr('dy','0.35em')
+    .attr('font-family','Syne,sans-serif').attr('font-size',14).attr('font-weight','700').attr('fill','#e8c97a').text('我');
+
+  people.forEach((p,i)=>{
+    const ring=rings.find(r=>p.strength>=r.min)||rings[2];
+    const sameRing=people.filter(x=>x.strength>=ring.min&&x.strength<(ring.min>=8?11:ring.min+3));
+    const idx=sameRing.indexOf(p), count=sameRing.length;
+    const angle=(idx/Math.max(count,1))*Math.PI*2-Math.PI/2;
+    const x=cx+ring.r*Math.cos(angle), y=cy+ring.r*Math.sin(angle);
+    const c=getColor(p), r=10+p.strength/2;
+
+    g.append('line').attr('x1',cx).attr('y1',cy).attr('x2',x).attr('y2',y)
+      .attr('stroke',c).attr('stroke-opacity',0.1+p.strength*0.014).attr('stroke-width',p.strength/6);
+
+    const nd=g.append('g').attr('class','node-group').attr('transform',`translate(${x},${y})`).style('cursor','pointer')
+      .on('click',()=>selectPerson(p.id))
+      .on('mousemove',e=>showTip(e,p)).on('mouseleave',hideTip);
+
+    nd.append('circle').attr('r',r+6).attr('fill','none').attr('stroke',c).attr('stroke-opacity',0.1)
+      .style('animation',`nodePulse 3s ${i*0.25}s ease-in-out infinite`).style('transform-origin','center');
+    nd.append('circle').attr('r',r).attr('fill',`${c}16`).attr('stroke',c).attr('stroke-width',1).attr('filter','url(#glow)');
+    nd.append('text').attr('text-anchor','middle').attr('dy','0.35em')
+      .attr('font-family','Syne,sans-serif').attr('font-size',10).attr('font-weight','700')
+      .attr('fill',c).attr('pointer-events','none').text(p.name.length>2?p.name.slice(0,2):p.name);
+  });
+}
+
+function highlightNode(id) {
+  d3.selectAll('.node-main')
+    .attr('stroke-width',function(){const d=d3.select(this.parentNode).datum();return d&&d.id===id?2.5:(d&&d.isMe?1.5:1);})
+    .attr('stroke-opacity',function(){const d=d3.select(this.parentNode).datum();return d&&d.id===id?1:0.7;});
+}
+
+function showTip(e,p) {
+  document.getElementById('tt-name').textContent = p.name;
+  document.getElementById('tt-body').innerHTML = [
+    p.job      && `<div class="tt-row">职位 <span>${p.job}</span></div>`,
+    p.industry && `<div class="tt-row">行业 <span>${p.industry}</span></div>`,
+    p.income   && `<div class="tt-row">收入 <span>L${p.income} ${INCOME_LBL[p.income]}</span></div>`,
+    `<div class="tt-row">强度 <span>${p.strength}/10</span></div>`,
+  ].filter(Boolean).join('');
+  const tt=document.getElementById('tooltip');
+  tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-8)+'px'; tt.classList.add('show');
+}
+function hideTip() { document.getElementById('tooltip').classList.remove('show'); }
+
+// ── Master render ──────────────────────────────────────────────
+// ── Toast ─────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(icon, html) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-text').innerHTML = html;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 3500);
+}
+
+// ── Data page render ──────────────────────────────────────────
+function renderDataPage() {
+  const grid = document.getElementById('data-stats-grid');
+  if (!grid) return;
+  // 检测示例数据（以 d1 d2 等 ID 为标志）
+  const hasDemo = people.some(p=>['d1','d2','d3','d4','d5','d6'].includes(p.id));
+  const demoSec = document.getElementById('demo-section');
+  if (demoSec) demoSec.style.display = hasDemo ? 'block' : 'none';
+  const bondCount = people.reduce((s,p)=>s+(p.bonds||[]).length, 0);
+  // 最早创建时间
+  const dates = people.map(p=>p.createdAt).filter(Boolean).sort();
+  const earliest = dates.length ? fmtDate(dates[0]).slice(0,10) : '—';
+
+  const stats = [
+    { val: people.length,                                 lbl: '联系人总数' },
+    { val: bondCount,                                     lbl: '情分记录' },
+    { val: people.filter(p=>p.strength>=8).length,        lbl: '核心关系' },
+    { val: earliest,                                      lbl: '最早录入' },
+  ];
+  grid.innerHTML = stats.map(s=>`
+    <div class="data-stat-card">
+      <div class="data-stat-val">${s.val}</div>
+      <div class="data-stat-lbl">${s.lbl}</div>
+    </div>`).join('');
+}
+
+// ── Export ────────────────────────────────────────────────────
+function exportData() {
+  const payload = { version:1, exportedAt: new Date().toISOString(), people };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = 'NEXUS_backup_'+date+'.json';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('✓', '备份已导出 · <strong>'+people.length+'</strong> 位联系人');
+}
+
+// ── Import (merge) ────────────────────────────────────────────
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const imported = data.people || (Array.isArray(data) ? data : []);
+      if (!imported.length) { showToast('⚠', '文件中没有找到联系人数据'); return; }
+      let added = 0, updated = 0;
+      imported.forEach(p => {
+        const idx = people.findIndex(x=>x.id===p.id);
+        if (idx>=0) { people[idx]=p; updated++; }
+        else        { people.push(p); added++; }
+      });
+      save(); render();
+      showToast('✓', '导入完成 · 新增 <strong>'+added+'</strong> 人，更新 <strong>'+updated+'</strong> 人');
+    } catch(err) {
+      showToast('✕', '文件解析失败，请检查格式是否正确');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── Clear all ─────────────────────────────────────────────────
+function clearAllData() {
+  if (!confirm('确认清空所有数据？此操作不可撤销。\n\n建议先导出备份。')) return;
+  people = []; selected = null;
+  save(); render();
+  showToast('✓', '所有数据已清空');
+}
+
+function clearDemoData() {
+  if (!confirm('确认清除所有示例数据？')) return;
+  people = []; selected = null;
+  save(); render();
+  document.getElementById('demo-section').style.display = 'none';
+  showToast('✓', '示例数据已清除，可以开始录入你的真实人脉了');
+}
+
+// ── Master render ─────────────────────────────────────────────
+function render() {
+  updateStats();
+  if (page==='contacts') renderContacts();
+  if (page==='graph') renderGraph();
+  if (page==='data') renderDataPage();
+  renderDetail();
+}
+
+window.addEventListener('resize', ()=>{ if(page==='graph') renderGraph(); });
+
+// ── Mobile helpers ────────────────────────────────────────────
+function isMobile() { return window.innerWidth <= 768; }
+
+function mobileSetPage(p) {
+  // 同步到主 setPage
+  setPage(p);
+  // 更新底部 Tab 高亮
+  ['graph','contacts','data'].forEach(id=>{
+    document.getElementById('mtab-'+id)?.classList.toggle('active', id===p);
+  });
+}
+
+// 移动端选中联系人：显示抽屉而非右侧面板
+const _origSelectPerson = selectPerson;
+function selectPerson(id) {
+  selected = id;
+  if (isMobile()) {
+    renderMobileDrawer();
+    if (page==='contacts') renderContacts();
+  } else {
+    renderDetail();
+    const app = document.getElementById('app');
+    app.style.gridTemplateColumns = 'var(--sidebar-w) 1fr var(--detail-w)';
+    document.querySelector('.detail').classList.add('visible');
+    if (page==='contacts') renderContacts();
+    if (page==='graph') {
+      highlightNode(id);
+      app.addEventListener('transitionend', function onEnd(e) {
+        if (e.propertyName === 'grid-template-columns') {
+          app.removeEventListener('transitionend', onEnd);
+          renderGraph();
+        }
+      });
+    }
+  }
+}
+
+function renderMobileDrawer() {
+  const drawer  = document.getElementById('mobile-drawer');
+  const content = document.getElementById('mobile-drawer-content');
+  if (!drawer || !content) return;
+  if (!selected) { closeMobileDrawer(); return; }
+
+  const p = people.find(x=>x.id===selected);
+  if (!p) return;
+  const c = getColor(p);
+
+  // 复用 renderDetail 的内容逻辑，但输出到抽屉
+  const INCOME_LBL_LOCAL = ['','<10万','10–30万','30–100万','100–500万','>500万'];
+  content.innerHTML = `
+    <div class="dc-hero" style="padding-top:8px">
+      <div class="dc-avatar-lg" style="background:${c}18;color:${c}">${p.name[0]}</div>
+      <div class="dc-name">${p.name}</div>
+      <div class="dc-job">${[p.job,p.industry].filter(Boolean).join(' · ')||'职业未知'}</div>
+      <div class="dc-score-display">
+        <div class="dc-score-num" style="background:linear-gradient(135deg,${c},#00ffd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${p.strength}</div>
+        <div class="dc-score-lbl">/ 10<br>关系强度</div>
+      </div>
+      <div class="dc-track" style="width:100%"><div class="dc-fill" style="width:${p.strength*10}%;background:linear-gradient(90deg,${c},#00ffd5)"></div></div>
+    </div>
+    <div class="dc-grid" style="margin-bottom:12px">
+      <div class="dc-cell"><div class="dc-lbl">收入层级</div><div class="dc-val">${p.income?'L'+p.income+' '+INCOME_LBL_LOCAL[p.income]:'未填写'}</div></div>
+      <div class="dc-cell"><div class="dc-lbl">认识方式</div><div class="dc-val">${p.how||'未填写'}</div></div>
+      <div class="dc-cell full"><div class="dc-lbl">家庭状况</div><div class="dc-val">${p.family||'未填写'}</div></div>
+      <div class="dc-cell full"><div class="dc-lbl">电话</div><div class="dc-val">${p.phone||'未填写'}</div></div>
+    </div>
+    ${(p.tags||[]).length?`<div class="dc-tags" style="margin-bottom:12px">${p.tags.map(t=>`<span class="dc-tag">${t}</span>`).join('')}</div>`:''}
+    ${p.need?`<div class="dc-notes-lbl">他的需求</div><div class="dc-notes">${p.need}</div>`:''}
+    ${p.value?`<div class="dc-notes-lbl">我的价值</div><div class="dc-notes" style="border-left-color:rgba(232,201,122,0.40)">${p.value}</div>`:''}
+    ${p.notes?`<div class="dc-notes-lbl">备注</div><div class="dc-notes">${p.notes}</div>`:''}
+    <div class="dc-actions" style="margin-top:12px">
+      <button class="dc-btn edit" onclick="openModal('${p.id}');closeMobileDrawer()">编辑</button>
+      <button class="dc-btn del" onclick="deletePerson('${p.id}');closeMobileDrawer()">删除</button>
+    </div>`;
+
+  drawer.classList.add('open');
+}
+
+function closeMobileDrawer() {
+  document.getElementById('mobile-drawer')?.classList.remove('open');
+  selected = null;
+  if (page==='contacts') renderContacts();
+}
+
+// ── Startup ───────────────────────────────────────────────────
+// 判断是否是全新用户（本地从未有过数据）
+if (_isFirstTime) {
+  // 全新用户：初始化为空数据，显示欢迎页
+  people = [];
+  updateStats();
+  showWelcome();
+} else {
+  // 老用户：正常启动
+  render();
+}
+
+// Click blank area to dismiss detail panel
+document.querySelector('.center').addEventListener('click', e => {
+  // Only dismiss if the click target is blank (not a card, node, or button)
+  const ignored = e.target.closest('.contact-card, .node-group, button, input, select, textarea, .graph-toolbar');
+  if (!ignored && selected) {
+    selected = null;
+    renderDetail();
+    if (page === 'contacts') renderContacts();
+  }
+});
+render();
+</script>
+</body>
+</html>
