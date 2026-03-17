@@ -1160,7 +1160,7 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
           </svg>
           开始构建我的人脉图谱
         </button>
-        <div class="welcome-hint">点击底部「添加」即可录入第一位联系人</div>
+
       </div>
     </div>
 
@@ -1537,11 +1537,8 @@ function showWelcome() {
 }
 
 function dismissWelcome() {
-  // 关闭欢迎页，进入关系图谱
-  document.getElementById('page-welcome').style.display = 'none';
   setPage('graph');
-  // 打开添加联系人弹窗，引导第一步
-  setTimeout(()=>openModal(), 400);
+  setTimeout(()=>openModal(), 300);
 }
 
 function setPage(p) {
@@ -1625,7 +1622,11 @@ function openModal(id) {
   }
   document.getElementById('overlay').classList.add('open');
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  // 如果关闭弹窗后没有任何联系人，回到欢迎页
+  if (people.length === 0) showWelcome();
+}
 
 function savePerson() {
   const name = document.getElementById('f-name').value.trim();
@@ -2070,20 +2071,27 @@ function clearAllData() {
   if (!confirm('确认清空所有数据？此操作不可撤销。\n\n建议先导出备份。')) return;
   people = []; selected = null;
   save(); render();
-  showToast('✓', '所有数据已清空');
 }
 
 function clearDemoData() {
   if (!confirm('确认清除所有示例数据？')) return;
   people = []; selected = null;
   save(); render();
-  document.getElementById('demo-section').style.display = 'none';
-  showToast('✓', '示例数据已清除，可以开始录入你的真实人脉了');
 }
 
 // ── Master render ─────────────────────────────────────────────
+function checkWelcome() {
+  // 没有联系人时显示欢迎页（无论当前在哪个页面）
+  if (people.length === 0) {
+    showWelcome();
+    return true;
+  }
+  return false;
+}
+
 function render() {
   updateStats();
+  if (checkWelcome()) return;  // 无数据时直接显示欢迎页，不渲染其他内容
   if (page==='contacts') renderContacts();
   if (page==='graph') renderGraph();
   if (page==='data') renderDataPage();
@@ -2188,16 +2196,8 @@ function applyLayout() {
 applyLayout();
 window.addEventListener('resize', applyLayout);
 
-// 判断是否是全新用户（本地从未有过数据）
-if (_isFirstTime) {
-  // 全新用户：初始化为空数据，显示欢迎页
-  people = [];
-  updateStats();
-  showWelcome();
-} else {
-  // 老用户：正常启动
-  render();
-}
+// 统一启动，render() 内部自动判断是否显示欢迎页
+render();
 
 // Click blank area to dismiss detail panel
 document.querySelector('.center').addEventListener('click', e => {
