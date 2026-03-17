@@ -854,9 +854,14 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   /* 整体布局：单栏，底部留出 Tab 空间 */
   #app {
     grid-template-columns: 1fr !important;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: 1fr;
     height: 100vh;
     height: 100dvh;
+  }
+
+  /* 中间主区域底部留出 Tab 高度 */
+  .center {
+    padding-bottom: 60px;
   }
 
   /* 隐藏左侧边栏 */
@@ -870,6 +875,7 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
     grid-column: 1;
     grid-row: 1;
     overflow: hidden;
+    padding-bottom: 60px;
   }
 
   /* 图谱工具栏调整 */
@@ -900,15 +906,14 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
 
   /* ── 底部 Tab 导航栏 ── */
   .mobile-tabs {
-    grid-row: 2;
     display: flex !important;
-    align-items: stretch;
-    height: 60px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 60px; z-index: 50;
+    background: linear-gradient(180deg, rgba(18,16,12,0.96) 0%, rgba(10,9,7,0.98) 100%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid var(--glass-border);
-    position: relative; z-index: 20;
+    align-items: stretch;
   }
   .mobile-tab {
     flex: 1; display: flex; flex-direction: column;
@@ -967,8 +972,8 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
 
 /* 桌面端隐藏移动端专用元素 */
 @media (min-width: 769px) {
-  .mobile-tabs   { display: none !important; }
-  .mobile-drawer { display: none !important; }
+  .mobile-tabs   { display: none; }
+  .mobile-drawer { display: none; }
 }
 </style>
 </head>
@@ -2181,6 +2186,17 @@ function closeMobileDrawer() {
 }
 
 // ── Startup ───────────────────────────────────────────────────
+// JS 控制移动端 Tab 显示，比纯 CSS 媒体查询更可靠
+function applyLayout() {
+  const tabs   = document.querySelector('.mobile-tabs');
+  const drawer = document.getElementById('mobile-drawer');
+  const mobile = window.innerWidth <= 768;
+  if (tabs)   tabs.style.display   = mobile ? 'flex'  : 'none';
+  if (drawer) drawer.style.display = mobile ? 'block' : 'none';
+}
+applyLayout();
+window.addEventListener('resize', applyLayout);
+
 // 判断是否是全新用户（本地从未有过数据）
 if (_isFirstTime) {
   // 全新用户：初始化为空数据，显示欢迎页
