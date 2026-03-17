@@ -32,9 +32,6 @@
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html, body { width:100%; height:100%; overflow:hidden; }
-@media (max-width: 768px) {
-  html, body { overflow: hidden; height: 100%; position: fixed; width: 100%; }
-}
 body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--text); }
 
 /* ── Background ── */
@@ -856,38 +853,31 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
 ══════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* 用 JS 设置的真实视口高度变量，解决 Safari 100vh 问题 */
+  /* 简单 flex 竖排，不依赖 grid 也不用 fixed */
   #app {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: 1fr;
-    height: var(--app-height, 100vh);
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+    height: 100svh; /* svh = small viewport height，Safari 最稳定 */
     overflow: hidden;
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    bottom: 0;
   }
 
-  /* 隐藏左侧边栏和右侧面板 */
-  .sidebar { display:none !important; }
-  .detail  { display:none !important; }
+  .sidebar { display: none !important; }
+  .detail  { display: none !important; }
 
-  /* 中间内容区：可滚动，底部留 Tab 高度 */
+  /* center 占满剩余空间，内部可滚动 */
   .center {
-    grid-column: 1; grid-row: 1;
-    overflow-y: auto; overflow-x: hidden;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    height: 100%;
+    min-height: 0; /* flex 子元素必须有这个才能收缩 */
   }
-
-  /* 所有子页面底部都留出 Tab 栏空间 */
-  .graph-wrap,
-  .contacts-wrap,
-  .data-wrap,
-  .welcome-wrap { padding-bottom: 70px !important; }
 
   /* 图谱 */
+  .graph-wrap { height: 100%; }
   .graph-toolbar { top: 12px; }
-  .graph-hint { display:none; }
+  .graph-hint { display: none; }
 
   /* 联系人列表 */
   .contacts-grid { grid-template-columns: 1fr !important; padding: 12px 14px; }
@@ -896,42 +886,38 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   .contacts-toolbar { padding: 8px 14px; }
 
   /* 数据管理 */
-  .data-wrap { padding: 16px 14px; gap: 16px; }
   .data-stats-grid { grid-template-columns: 1fr 1fr !important; }
   .data-actions { flex-direction: column; }
   .data-btn { min-width: unset; }
 
   /* 欢迎页 */
-  .welcome-wrap { padding: 32px 20px; }
-  .welcome-title { font-size: 28px; }
-  .welcome-tagline { font-size: 14px; }
+  .welcome-title    { font-size: 28px; }
+  .welcome-tagline  { font-size: 14px; }
   .welcome-features { grid-template-columns: 1fr !important; }
-  .welcome-cta { padding: 12px 24px; font-size: 11px; width: 100%; }
-  .welcome-inner { max-width: 100%; }
+  .welcome-cta      { padding: 12px 24px; font-size: 11px; width: 100%; }
+  .welcome-inner    { max-width: 100%; }
 
-  /* ── 底部 Tab 导航栏 ── */
+  /* ── 底部 Tab 导航栏：flex 子元素，不用 fixed ── */
   .mobile-tabs {
     display: flex !important;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    /* 用 env() 适配 iPhone 底部安全区域 */
+    flex-shrink: 0;
+    width: 100%;
+    height: 60px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    height: calc(60px + env(safe-area-inset-bottom, 0px));
-    z-index: 999;
     background: rgba(10,9,7,0.97);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid var(--glass-border);
     align-items: stretch;
+    z-index: 50;
   }
   .mobile-tab {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 4px;
-    cursor: pointer; transition: all 0.18s;
     border: none; background: transparent;
-    color: var(--text3); padding: 0 0 2px;
+    color: var(--text3); cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    padding-bottom: 0;
+    transition: color 0.18s;
   }
   .mobile-tab.active { color: var(--cyan); }
   .mobile-tab svg { flex-shrink: 0; }
@@ -942,10 +928,7 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   .mobile-tab.add-btn { color: var(--text3); }
 
   /* ── 移动端详情抽屉 ── */
-  .mobile-drawer {
-    position: fixed; inset: 0; z-index: 500;
-    pointer-events: none;
-  }
+  .mobile-drawer { position: fixed; inset: 0; z-index: 500; pointer-events: none; }
   .mobile-drawer.open { pointer-events: all; }
   .mobile-drawer-backdrop {
     position: absolute; inset: 0;
@@ -955,15 +938,14 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   .mobile-drawer.open .mobile-drawer-backdrop { opacity: 1; }
   .mobile-drawer-panel {
     position: absolute; bottom: 0; left: 0; right: 0;
-    max-height: 88vh;
-    background: linear-gradient(180deg, rgba(18,16,12,0.99) 0%, rgba(10,9,7,0.99) 100%);
+    max-height: 88svh;
+    background: linear-gradient(180deg, rgba(18,16,12,0.99), rgba(10,9,7,0.99));
     border-top: 1px solid var(--glass-border2);
     border-radius: 20px 20px 0 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
     transform: translateY(100%);
     transition: transform 0.32s cubic-bezier(0.34,1.2,0.64,1);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 16px);
   }
   .mobile-drawer-panel::-webkit-scrollbar { display: none; }
   .mobile-drawer.open .mobile-drawer-panel { transform: translateY(0); }
@@ -2203,18 +2185,9 @@ function applyLayout() {
   const drawer = document.getElementById('mobile-drawer');
   if (tabs)   tabs.style.display   = mobile ? 'flex'  : 'none';
   if (drawer) drawer.style.display = mobile ? 'block' : 'none';
-
-  if (mobile) {
-    // 用真实视口高度设置 CSS 变量，解决 Safari 100vh 包含地址栏的问题
-    const realH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    document.documentElement.style.setProperty('--app-height', realH + 'px');
-  }
 }
 applyLayout();
 window.addEventListener('resize', applyLayout);
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', applyLayout);
-}
 
 // 统一启动，render() 内部自动判断是否显示欢迎页
 render();
