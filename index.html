@@ -30,6 +30,9 @@
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html, body { width:100%; height:100%; overflow:hidden; }
+@media (max-width: 768px) {
+  html, body { overflow: auto; height: auto; min-height: 100%; }
+}
 body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--text); }
 
 /* ── Background ── */
@@ -857,6 +860,7 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
     grid-template-rows: 1fr;
     height: 100vh;
     height: 100dvh;
+    overflow: hidden;
   }
 
   /* 中间主区域底部留出 Tab 高度 */
@@ -874,8 +878,10 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   .center {
     grid-column: 1;
     grid-row: 1;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding-bottom: 60px;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* 图谱工具栏调整 */
@@ -892,13 +898,13 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   .contacts-toolbar { padding: 8px 14px; }
 
   /* 数据管理页面 */
-  .data-wrap { padding: 16px 14px; gap: 16px; }
+  .data-wrap { padding: 16px 14px 80px; gap: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .data-stats-grid { grid-template-columns: 1fr 1fr !important; }
   .data-actions { flex-direction: column; }
   .data-btn { min-width: unset; }
 
   /* 欢迎页 */
-  .welcome-wrap { padding: 32px 20px; }
+  .welcome-wrap { padding: 32px 20px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .welcome-title { font-size: 28px; }
   .welcome-tagline { font-size: 14px; }
   .welcome-features { grid-template-columns: 1fr !important; }
