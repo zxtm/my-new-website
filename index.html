@@ -849,37 +849,30 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
 @keyframes nodePulse { 0%,100%{opacity:0.10} 50%{opacity:0} }
 
 /* ══════════════════════════════════════
-   MOBILE — < 768px  极简录入模式
+   MOBILE — < 768px  静态提示页
 ══════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* 隐藏整个桌面端 app，显示手机专属页面 */
-  #app              { display: none !important; }
-  .mobile-tabs      { display: none !important; }
-  .mobile-drawer    { display: none !important; }
-  #mobile-entry     { display: flex !important; }
+  #app          { display: none !important; }
+  #mobile-entry { display: flex !important; }
 }
-
 @media (min-width: 769px) {
-  #mobile-entry     { display: none !important; }
-  .mobile-tabs      { display: none !important; }
-  .mobile-drawer    { display: none !important; }
+  #mobile-entry { display: none !important; }
 }
 
-/* 手机端录入页样式 */
+/* 手机端静态提示页 */
 #mobile-entry {
   display: none;
   position: fixed; inset: 0;
   flex-direction: column;
   align-items: center; justify-content: center;
   background: var(--bg);
-  padding: 40px 28px;
+  padding: 40px 32px;
   text-align: center;
   z-index: 9999;
 }
 #mobile-entry::before {
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 30%, rgba(232,201,122,0.06) 0%, transparent 60%);
+  background: radial-gradient(ellipse 80% 50% at 50% 35%, rgba(232,201,122,0.06) 0%, transparent 65%);
 }
 .me-icon {
   width: 72px; height: 72px; border-radius: 20px; margin-bottom: 24px;
@@ -898,37 +891,27 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
 }
 .me-subtitle {
   font-size: 12px; color: var(--text3); letter-spacing: 0.18em;
-  text-transform: uppercase; margin-bottom: 32px;
+  text-transform: uppercase; margin-bottom: 40px;
   position: relative; z-index: 1;
 }
-.me-tagline {
-  font-size: 15px; color: var(--text2); line-height: 1.8;
-  margin-bottom: 44px; position: relative; z-index: 1;
-  font-family: 'Noto Sans SC', sans-serif;
+.me-divider {
+  width: 40px; height: 1px; background: rgba(232,201,122,0.25);
+  margin-bottom: 32px; position: relative; z-index: 1;
 }
-.me-tagline strong { color: var(--cyan); font-weight: 500; }
-.me-btn {
-  width: 100%; max-width: 280px;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 16px 28px; border-radius: 12px;
-  background: linear-gradient(135deg, rgba(232,201,122,0.18), rgba(180,150,70,0.10));
-  border: 1px solid rgba(232,201,122,0.32); color: var(--cyan);
-  cursor: pointer; transition: all 0.22s;
-  box-shadow: 0 4px 20px rgba(200,165,80,0.12);
+.me-hint-main {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 16px; color: var(--text); line-height: 1.8;
+  margin-bottom: 12px; position: relative; z-index: 1;
+}
+.me-hint-sub {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 12px; color: var(--text3); line-height: 1.8;
+  letter-spacing: 0.06em; position: relative; z-index: 1;
+  margin-bottom: 48px;
+}
+.me-copyright {
+  font-size: 10px; color: var(--text3); letter-spacing: 0.1em;
   position: relative; z-index: 1;
-  -webkit-tap-highlight-color: transparent;
-  margin-bottom: 20px;
-}
-.me-btn:active {
-  background: linear-gradient(135deg, rgba(232,201,122,0.28), rgba(180,150,70,0.18));
-  transform: scale(0.98);
-}
-.me-hint {
-  font-size: 11px; color: var(--text3); letter-spacing: 0.08em;
-  line-height: 1.7; position: relative; z-index: 1;
-  font-family: 'Noto Sans SC', sans-serif;
 }
 </style>
 </head>
@@ -1315,18 +1298,10 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   </div>
   <div class="me-title">NEXUS</div>
   <div class="me-subtitle">人脉图谱</div>
-  <div class="me-tagline">
-    人与人之间的本质是<strong>价值交换</strong>。<br>
-    把你认识的每一个人，变成清晰可见的<strong>人脉资产</strong>。
-  </div>
-  <button class="me-btn" onclick="mobilAddContact()">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-    </svg>
-    添加联系人
-  </button>
-  <div class="me-hint">完整功能请在电脑端访问<br>© 2026 追寻天命</div>
+  <div class="me-divider"></div>
+  <div class="me-hint-main">完整功能请在电脑端访问</div>
+  <div class="me-hint-sub">推荐使用 Chrome / Safari 桌面版<br>以获得最佳体验</div>
+  <div class="me-copyright">© 2026 追寻天命</div>
 </div>
 
 <!-- Tooltip -->
@@ -1568,7 +1543,7 @@ function openModal(id) {
 }
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
-  if (window.innerWidth > 768 && people.length === 0) showWelcome();
+  if (people.length === 0) showWelcome();
 }
 
 function savePerson() {
@@ -2043,10 +2018,7 @@ function render() {
 
 window.addEventListener('resize', ()=>{ if(page==='graph') renderGraph(); });
 
-// ── Mobile entry ──────────────────────────────────────────────
-function mobilAddContact() {
-  openModal();
-}
+// ── Mobile: 静态提示页，无需 JS ──
 
 // ── Startup ───────────────────────────────────────────────────
 // JS 控制移动端 Tab 显示，比纯 CSS 媒体查询更可靠
