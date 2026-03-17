@@ -849,117 +849,86 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
 @keyframes nodePulse { 0%,100%{opacity:0.10} 50%{opacity:0} }
 
 /* ══════════════════════════════════════
-   MOBILE — < 768px
+   MOBILE — < 768px  极简录入模式
 ══════════════════════════════════════ */
 @media (max-width: 768px) {
-
-  /* 简单 flex 竖排，不依赖 grid 也不用 fixed */
-  #app {
-    display: flex !important;
-    flex-direction: column;
-    width: 100%;
-    height: 100svh; /* svh = small viewport height，Safari 最稳定 */
-    overflow: hidden;
-  }
-
-  .sidebar { display: none !important; }
-  .detail  { display: none !important; }
-
-  /* center 占满剩余空间，内部可滚动 */
-  .center {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0; /* flex 子元素必须有这个才能收缩 */
-  }
-
-  /* 图谱 */
-  .graph-wrap { height: 100%; }
-  .graph-toolbar { top: 12px; }
-  .graph-hint { display: none; }
-
-  /* 联系人列表 */
-  .contacts-grid { grid-template-columns: 1fr !important; padding: 12px 14px; }
-  .contacts-header { padding: 14px 16px 10px; }
-  .contacts-title  { font-size: 16px; }
-  .contacts-toolbar { padding: 8px 14px; }
-
-  /* 数据管理 */
-  .data-stats-grid { grid-template-columns: 1fr 1fr !important; }
-  .data-actions { flex-direction: column; }
-  .data-btn { min-width: unset; }
-
-  /* 欢迎页 */
-  .welcome-title    { font-size: 28px; }
-  .welcome-tagline  { font-size: 14px; }
-  .welcome-features { grid-template-columns: 1fr !important; }
-  .welcome-cta      { padding: 12px 24px; font-size: 11px; width: 100%; }
-  .welcome-inner    { max-width: 100%; }
-
-  /* ── 底部 Tab 导航栏：flex 子元素，不用 fixed ── */
-  .mobile-tabs {
-    display: flex !important;
-    flex-shrink: 0;
-    width: 100%;
-    height: 60px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(10,9,7,0.97);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-top: 1px solid var(--glass-border);
-    align-items: stretch;
-    z-index: 50;
-  }
-  .mobile-tab {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 4px;
-    border: none; background: transparent;
-    color: var(--text3); cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: color 0.18s;
-  }
-  .mobile-tab.active { color: var(--cyan); }
-  .mobile-tab svg { flex-shrink: 0; }
-  .mobile-tab-label {
-    font-family: 'Syne', sans-serif; font-size: 9px;
-    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-  }
-  .mobile-tab.add-btn { color: var(--text3); }
-
-  /* ── 移动端详情抽屉 ── */
-  .mobile-drawer { position: fixed; inset: 0; z-index: 500; pointer-events: none; }
-  .mobile-drawer.open { pointer-events: all; }
-  .mobile-drawer-backdrop {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
-    opacity: 0; transition: opacity 0.25s;
-  }
-  .mobile-drawer.open .mobile-drawer-backdrop { opacity: 1; }
-  .mobile-drawer-panel {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    max-height: 88svh;
-    background: linear-gradient(180deg, rgba(18,16,12,0.99), rgba(10,9,7,0.99));
-    border-top: 1px solid var(--glass-border2);
-    border-radius: 20px 20px 0 0;
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-    transform: translateY(100%);
-    transition: transform 0.32s cubic-bezier(0.34,1.2,0.64,1);
-    padding-bottom: env(safe-area-inset-bottom, 16px);
-  }
-  .mobile-drawer-panel::-webkit-scrollbar { display: none; }
-  .mobile-drawer.open .mobile-drawer-panel { transform: translateY(0); }
-  .mobile-drawer-handle {
-    width: 36px; height: 4px; border-radius: 2px;
-    background: rgba(255,255,255,0.15); margin: 12px auto 0;
-  }
-  .mobile-drawer-content { padding: 16px 18px 40px; }
+  /* 隐藏整个桌面端 app，显示手机专属页面 */
+  #app              { display: none !important; }
+  .mobile-tabs      { display: none !important; }
+  .mobile-drawer    { display: none !important; }
+  #mobile-entry     { display: flex !important; }
 }
 
-/* 桌面端隐藏移动端专用元素 */
 @media (min-width: 769px) {
-  .mobile-tabs   { display: none !important; }
-  .mobile-drawer { display: none !important; }
+  #mobile-entry     { display: none !important; }
+  .mobile-tabs      { display: none !important; }
+  .mobile-drawer    { display: none !important; }
+}
+
+/* 手机端录入页样式 */
+#mobile-entry {
+  display: none;
+  position: fixed; inset: 0;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--bg);
+  padding: 40px 28px;
+  text-align: center;
+  z-index: 9999;
+}
+#mobile-entry::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 30%, rgba(232,201,122,0.06) 0%, transparent 60%);
+}
+.me-icon {
+  width: 72px; height: 72px; border-radius: 20px; margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(232,201,122,0.20), rgba(140,110,40,0.30));
+  border: 1px solid rgba(232,201,122,0.24);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(200,165,80,0.15);
+  position: relative; z-index: 1;
+}
+.me-title {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: linear-gradient(135deg, #fff, rgba(240,225,190,0.75));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 6px; position: relative; z-index: 1;
+}
+.me-subtitle {
+  font-size: 12px; color: var(--text3); letter-spacing: 0.18em;
+  text-transform: uppercase; margin-bottom: 32px;
+  position: relative; z-index: 1;
+}
+.me-tagline {
+  font-size: 15px; color: var(--text2); line-height: 1.8;
+  margin-bottom: 44px; position: relative; z-index: 1;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.me-tagline strong { color: var(--cyan); font-weight: 500; }
+.me-btn {
+  width: 100%; max-width: 280px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 16px 28px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(232,201,122,0.18), rgba(180,150,70,0.10));
+  border: 1px solid rgba(232,201,122,0.32); color: var(--cyan);
+  cursor: pointer; transition: all 0.22s;
+  box-shadow: 0 4px 20px rgba(200,165,80,0.12);
+  position: relative; z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: 20px;
+}
+.me-btn:active {
+  background: linear-gradient(135deg, rgba(232,201,122,0.28), rgba(180,150,70,0.18));
+  transform: scale(0.98);
+}
+.me-hint {
+  font-size: 11px; color: var(--text3); letter-spacing: 0.08em;
+  line-height: 1.7; position: relative; z-index: 1;
+  font-family: 'Noto Sans SC', sans-serif;
 }
 </style>
 </head>
@@ -1329,53 +1298,35 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
 
 </div>
 
-<!-- ════════════ MOBILE BOTTOM TABS ════════════ -->
-<nav class="mobile-tabs">
-  <button class="mobile-tab active" id="mtab-graph" onclick="mobileSetPage('graph')">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.4"/>
-      <circle cx="2.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/>
-      <circle cx="17.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/>
-      <circle cx="2.5" cy="16.5" r="2" stroke="currentColor" stroke-width="1.2"/>
-      <circle cx="17.5" cy="16.5" r="2" stroke="currentColor" stroke-width="1.2"/>
-      <line x1="10" y1="10" x2="2.5" y2="3.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
-      <line x1="10" y1="10" x2="17.5" y2="3.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
-      <line x1="10" y1="10" x2="2.5" y2="16.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
-      <line x1="10" y1="10" x2="17.5" y2="16.5" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/>
+<!-- ════════════ MOBILE ENTRY ════════════ -->
+<div id="mobile-entry">
+  <div class="me-icon">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="5" stroke="var(--cyan)" stroke-width="1.6"/>
+      <circle cx="4"  cy="6"  r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+      <circle cx="28" cy="6"  r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+      <circle cx="4"  cy="26" r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+      <circle cx="28" cy="26" r="2.8" stroke="var(--cyan)" stroke-width="1.3"/>
+      <line x1="16" y1="16" x2="4"  y2="6"  stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
+      <line x1="16" y1="16" x2="28" y2="6"  stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
+      <line x1="16" y1="16" x2="4"  y2="26" stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
+      <line x1="16" y1="16" x2="28" y2="26" stroke="var(--cyan)" stroke-opacity=".5" stroke-width="1.2"/>
     </svg>
-    <span class="mobile-tab-label">图谱</span>
-  </button>
-  <button class="mobile-tab" id="mtab-contacts" onclick="mobileSetPage('contacts')">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.4"/>
-      <path d="M2 18c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-    </svg>
-    <span class="mobile-tab-label">联系人</span>
-  </button>
-  <button class="mobile-tab add-btn" onclick="openModal()">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <line x1="10" y1="3" x2="10" y2="17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-    </svg>
-    <span class="mobile-tab-label">添加</span>
-  </button>
-  <button class="mobile-tab" id="mtab-data" onclick="mobileSetPage('data')">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <ellipse cx="10" cy="5.5" rx="6.5" ry="2.5" stroke="currentColor" stroke-width="1.3"/>
-      <path d="M3.5 5.5v4c0 1.38 2.91 2.5 6.5 2.5s6.5-1.12 6.5-2.5v-4" stroke="currentColor" stroke-width="1.3"/>
-      <path d="M3.5 9.5v4c0 1.38 2.91 2.5 6.5 2.5s6.5-1.12 6.5-2.5v-4" stroke="currentColor" stroke-width="1.3"/>
-    </svg>
-    <span class="mobile-tab-label">数据</span>
-  </button>
-</nav>
-
-<!-- ════════════ MOBILE DETAIL DRAWER ════════════ -->
-<div class="mobile-drawer" id="mobile-drawer">
-  <div class="mobile-drawer-backdrop" onclick="closeMobileDrawer()"></div>
-  <div class="mobile-drawer-panel">
-    <div class="mobile-drawer-handle"></div>
-    <div class="mobile-drawer-content" id="mobile-drawer-content"></div>
   </div>
+  <div class="me-title">NEXUS</div>
+  <div class="me-subtitle">人脉图谱</div>
+  <div class="me-tagline">
+    人与人之间的本质是<strong>价值交换</strong>。<br>
+    把你认识的每一个人，变成清晰可见的<strong>人脉资产</strong>。
+  </div>
+  <button class="me-btn" onclick="mobilAddContact()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    添加联系人
+  </button>
+  <div class="me-hint">完整功能请在电脑端访问<br>© 2026 追寻天命</div>
 </div>
 
 <!-- Tooltip -->
@@ -1617,8 +1568,15 @@ function openModal(id) {
 }
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
-  // 如果关闭弹窗后没有任何联系人，回到欢迎页
-  if (people.length === 0) showWelcome();
+  const mobile = window.innerWidth <= 768;
+  if (mobile) {
+    // 手机端：关闭弹窗后回到手机入口页，隐藏桌面 app
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('mobile-entry').style.display = 'flex';
+  } else {
+    // 桌面端：没有联系人时显示欢迎页
+    if (people.length === 0) showWelcome();
+  }
 }
 
 function savePerson() {
@@ -2093,101 +2051,21 @@ function render() {
 
 window.addEventListener('resize', ()=>{ if(page==='graph') renderGraph(); });
 
-// ── Mobile helpers ────────────────────────────────────────────
-function isMobile() { return window.innerWidth <= 768; }
-
-function mobileSetPage(p) {
-  // 同步到主 setPage
-  setPage(p);
-  // 更新底部 Tab 高亮
-  ['graph','contacts','data'].forEach(id=>{
-    document.getElementById('mtab-'+id)?.classList.toggle('active', id===p);
-  });
-}
-
-// 移动端选中联系人：显示抽屉而非右侧面板
-const _origSelectPerson = selectPerson;
-function selectPerson(id) {
-  selected = id;
-  if (isMobile()) {
-    renderMobileDrawer();
-    if (page==='contacts') renderContacts();
-  } else {
-    renderDetail();
-    const app = document.getElementById('app');
-    app.style.gridTemplateColumns = 'var(--sidebar-w) 1fr var(--detail-w)';
-    document.querySelector('.detail').classList.add('visible');
-    if (page==='contacts') renderContacts();
-    if (page==='graph') {
-      highlightNode(id);
-      app.addEventListener('transitionend', function onEnd(e) {
-        if (e.propertyName === 'grid-template-columns') {
-          app.removeEventListener('transitionend', onEnd);
-          renderGraph();
-        }
-      });
-    }
-  }
-}
-
-function renderMobileDrawer() {
-  const drawer  = document.getElementById('mobile-drawer');
-  const content = document.getElementById('mobile-drawer-content');
-  if (!drawer || !content) return;
-  if (!selected) { closeMobileDrawer(); return; }
-
-  const p = people.find(x=>x.id===selected);
-  if (!p) return;
-  const c = getColor(p);
-
-  // 复用 renderDetail 的内容逻辑，但输出到抽屉
-  const INCOME_LBL_LOCAL = ['','<10万','10–30万','30–100万','100–500万','>500万'];
-  content.innerHTML = `
-    <div class="dc-hero" style="padding-top:8px">
-      <div class="dc-avatar-lg" style="background:${c}18;color:${c}">${p.name[0]}</div>
-      <div class="dc-name">${p.name}</div>
-      <div class="dc-job">${[p.job,p.industry].filter(Boolean).join(' · ')||'职业未知'}</div>
-      <div class="dc-score-display">
-        <div class="dc-score-num" style="background:linear-gradient(135deg,${c},#00ffd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${p.strength}</div>
-        <div class="dc-score-lbl">/ 10<br>关系强度</div>
-      </div>
-      <div class="dc-track" style="width:100%"><div class="dc-fill" style="width:${p.strength*10}%;background:linear-gradient(90deg,${c},#00ffd5)"></div></div>
-    </div>
-    <div class="dc-grid" style="margin-bottom:12px">
-      <div class="dc-cell"><div class="dc-lbl">收入层级</div><div class="dc-val">${p.income?'L'+p.income+' '+INCOME_LBL_LOCAL[p.income]:'未填写'}</div></div>
-      <div class="dc-cell"><div class="dc-lbl">认识方式</div><div class="dc-val">${p.how||'未填写'}</div></div>
-      <div class="dc-cell full"><div class="dc-lbl">家庭状况</div><div class="dc-val">${p.family||'未填写'}</div></div>
-      <div class="dc-cell full"><div class="dc-lbl">电话</div><div class="dc-val">${p.phone||'未填写'}</div></div>
-    </div>
-    ${(p.tags||[]).length?`<div class="dc-tags" style="margin-bottom:12px">${p.tags.map(t=>`<span class="dc-tag">${t}</span>`).join('')}</div>`:''}
-    ${p.need?`<div class="dc-notes-lbl">他的需求</div><div class="dc-notes">${p.need}</div>`:''}
-    ${p.value?`<div class="dc-notes-lbl">我的价值</div><div class="dc-notes" style="border-left-color:rgba(232,201,122,0.40)">${p.value}</div>`:''}
-    ${p.notes?`<div class="dc-notes-lbl">备注</div><div class="dc-notes">${p.notes}</div>`:''}
-    <div class="dc-actions" style="margin-top:12px">
-      <button class="dc-btn edit" onclick="openModal('${p.id}');closeMobileDrawer()">编辑</button>
-      <button class="dc-btn del" onclick="deletePerson('${p.id}');closeMobileDrawer()">删除</button>
-    </div>`;
-
-  drawer.classList.add('open');
-}
-
-function closeMobileDrawer() {
-  document.getElementById('mobile-drawer')?.classList.remove('open');
-  selected = null;
-  if (page==='contacts') renderContacts();
+// ── Mobile entry ──────────────────────────────────────────────
+function mobilAddContact() {
+  // 手机端：显示桌面 app 的 modal，隐藏手机入口页
+  document.getElementById('mobile-entry').style.display = 'none';
+  document.getElementById('app').style.display = 'grid';
+  openModal();
+  // 保存后或取消后回到手机入口
+  const origClose = window._origClose;
 }
 
 // ── Startup ───────────────────────────────────────────────────
 // JS 控制移动端 Tab 显示，比纯 CSS 媒体查询更可靠
-function applyLayout() {
-  const mobile = window.innerWidth <= 768;
-  const tabs   = document.querySelector('.mobile-tabs');
-  const drawer = document.getElementById('mobile-drawer');
-  if (tabs)   tabs.style.display   = mobile ? 'flex'  : 'none';
-  if (drawer) drawer.style.display = mobile ? 'block' : 'none';
-}
+// applyLayout: 移动端不需要额外操作，CSS 媒体查询处理显隐
+function applyLayout() {}
 applyLayout();
-window.addEventListener('resize', applyLayout);
 
 // 统一启动，render() 内部自动判断是否显示欢迎页
 render();
