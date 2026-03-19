@@ -135,6 +135,7 @@ body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--
   color:var(--text3); padding:0 8px 6px;
 }
 
+
 /* Nav items — the main menu */
 .nav-item {
   display:flex; align-items:center; gap:9px;
@@ -168,6 +169,23 @@ body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--
 
 /* Sort sub-section (shown inside nav) */
 .sort-section { padding:0 10px; margin-top:2px; }
+
+/* 手风琴子菜单 */
+.accordion-sub {
+  overflow:hidden;
+  max-height:0;
+  transition: max-height 0.22s ease;
+}
+.accordion-sub.open { max-height:300px; }
+
+/* 父导航项展开箭头 */
+.nav-item-arrow {
+  margin-left:auto;
+  flex-shrink:0;
+  transition: transform 0.22s ease;
+  color: var(--text3);
+}
+.nav-item.open .nav-item-arrow { transform: rotate(90deg); }
 .sort-item {
   display:flex; align-items:center; gap:8px;
   padding:6px 10px; border-radius:var(--radius-sm); margin-bottom:2px;
@@ -845,6 +863,226 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
   letter-spacing:0.1em;
 }
 
+/* ── Global Search ── */
+.global-search-wrap {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  position: relative;
+}
+.global-search-wrap svg {
+  position: absolute; left: 22px; top: 50%; transform: translateY(-50%);
+  pointer-events: none;
+}
+.global-search {
+  width: 100%; padding: 8px 10px 8px 30px;
+  font-family: 'Noto Sans SC', sans-serif; font-size: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); color: var(--text); outline: none;
+  transition: all 0.2s;
+}
+.global-search::placeholder { color: var(--text3); }
+.global-search:focus {
+  border-color: rgba(232,201,122,0.35);
+  background: rgba(255,255,255,0.06);
+}
+/* 搜索结果下拉 */
+.search-dropdown {
+  position: absolute; top: calc(100% - 2px); left: 12px; right: 12px;
+  background: linear-gradient(135deg, rgba(18,14,10,0.99), rgba(10,8,6,0.99));
+  border: 1px solid rgba(232,201,122,0.20); border-radius: var(--radius-sm);
+  z-index: 100; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  max-height: 280px; overflow-y: auto;
+}
+.search-dropdown::-webkit-scrollbar { width: 3px; }
+.search-dropdown::-webkit-scrollbar-thumb { background: rgba(232,201,122,0.2); }
+.search-result-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: rgba(232,201,122,0.07); }
+.search-result-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800;
+}
+.search-result-name { font-size: 12px; font-weight: 500; }
+.search-result-sub  { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.search-result-empty {
+  padding: 16px 12px; font-size: 11px; color: var(--text3);
+  text-align: center; letter-spacing: 0.08em;
+}
+
+/* ── Relations picker ── */
+.relations-section { margin-bottom:12px; }
+.relations-lbl { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:8px; }
+.relations-list { display:flex; flex-direction:column; gap:5px; max-height:160px; overflow-y:auto; }
+.relations-list::-webkit-scrollbar { width:3px; }
+.relations-list::-webkit-scrollbar-thumb { background:rgba(232,201,122,0.2); }
+.relation-item {
+  display:flex; align-items:center; gap:10px;
+  padding:7px 10px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-border);
+  cursor:pointer; transition:all 0.15s;
+}
+.relation-item:hover { background:rgba(255,255,255,0.06); }
+.relation-item.selected {
+  background:rgba(232,201,122,0.08); border-color:rgba(232,201,122,0.25);
+}
+.relation-item-avatar {
+  width:24px; height:24px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:800;
+}
+.relation-item-name { font-size:12px; flex:1; }
+.relation-item-type {
+  font-size:10px; color:var(--text3);
+}
+.relation-type-select {
+  font-family:'Noto Sans SC',sans-serif; font-size:10px; padding:3px 6px;
+  background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+  color:var(--text); border-radius:4px; outline:none; cursor:pointer;
+  display:none;
+}
+.relation-item.selected .relation-type-select { display:block; }
+.relation-check {
+  width:14px; height:14px; border-radius:50%; flex-shrink:0;
+  border:1px solid var(--glass-border2);
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+.relation-item.selected .relation-check {
+  background:rgba(232,201,122,0.2); border-color:rgba(232,201,122,0.5);
+}
+
+/* ── Followup page ── */
+.followup-wrap {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+.followup-header {
+  padding:18px 24px 12px; border-bottom:1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+}
+.followup-title {
+  font-family:'Syne',sans-serif; font-size:18px; font-weight:700;
+  background:linear-gradient(135deg,#fff,rgba(240,225,190,0.75));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.followup-count { font-size:11px; color:var(--text3); letter-spacing:0.1em; }
+
+.followup-list {
+  flex:1; overflow-y:auto; padding:14px 20px; display:flex; flex-direction:column; gap:8px;
+}
+.followup-list::-webkit-scrollbar { width:3px; }
+.followup-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); }
+
+.followup-empty {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px; color:var(--text3);
+}
+.followup-empty-icon { font-size:32px; opacity:0.4; }
+.followup-empty-text { font-size:12px; letter-spacing:0.12em; }
+
+.followup-card {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015));
+  border:1px solid var(--glass-border); cursor:pointer;
+  transition:all 0.18s; position:relative; overflow:hidden;
+  animation:cardIn 0.3s ease both;
+}
+.followup-card:hover { background:linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03)); }
+.followup-card.overdue  { border-left:3px solid rgba(248,113,113,0.7); }
+.followup-card.soon     { border-left:3px solid rgba(251,191,36,0.7); }
+.followup-card.ok       { border-left:3px solid rgba(74,222,128,0.4); }
+.followup-card.no-cycle { border-left:3px solid var(--glass-border); }
+
+.followup-avatar {
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-size:15px; font-weight:800; position:relative;
+}
+.followup-avatar::after { content:''; position:absolute; inset:-2px; border-radius:50%; border:1px solid currentColor; opacity:0.18; }
+
+.followup-body { flex:1; min-width:0; }
+.followup-name { font-size:13px; font-weight:600; margin-bottom:2px; }
+.followup-meta { font-size:10px; color:var(--text3); line-height:1.6; }
+
+.followup-status { flex-shrink:0; text-align:right; }
+.followup-badge {
+  font-size:9px; font-family:'Syne',sans-serif; font-weight:700;
+  padding:3px 8px; border-radius:10px; letter-spacing:0.06em;
+  display:inline-block; margin-bottom:6px;
+}
+.followup-badge.overdue { background:rgba(248,113,113,0.12); color:#f87171; border:1px solid rgba(248,113,113,0.25); }
+.followup-badge.soon    { background:rgba(251,191,36,0.12);  color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
+.followup-badge.ok      { background:rgba(74,222,128,0.08);  color:#4ade80; border:1px solid rgba(74,222,128,0.2); }
+.followup-badge.no-cycle{ background:rgba(255,255,255,0.04); color:var(--text3); border:1px solid var(--glass-border); }
+
+.followup-action {
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:600;
+  letter-spacing:0.08em; text-transform:uppercase;
+  padding:5px 10px; border-radius:var(--radius-sm);
+  background:rgba(232,201,122,0.10); border:1px solid rgba(232,201,122,0.22);
+  color:var(--cyan); cursor:pointer; transition:all 0.18s; white-space:nowrap;
+}
+.followup-action:hover { background:rgba(232,201,122,0.18); }
+
+/* 详情面板里的今天联系了按钮 */
+.dc-contact-btn {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  width:100%; padding:10px; border-radius:var(--radius-sm); margin-bottom:10px;
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase;
+  background:rgba(232,201,122,0.10); border:1px solid rgba(232,201,122,0.24);
+  color:var(--cyan); cursor:pointer; transition:all 0.2s;
+}
+.dc-contact-btn:hover { background:rgba(232,201,122,0.18); box-shadow:var(--glow); }
+
+/* ── Charts ── */
+.charts-section { margin-top:0; }
+.chart-block {
+  background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015));
+  border:1px solid var(--glass-border); border-radius:var(--radius);
+  padding:16px 18px; margin-bottom:10px;
+}
+.chart-title {
+  font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+  color:var(--text2); letter-spacing:0.1em; text-transform:uppercase;
+  margin-bottom:14px; display:flex; align-items:center; gap:7px;
+}
+.chart-title-dot {
+  width:5px; height:5px; border-radius:50%;
+  background:var(--cyan); box-shadow:0 0 6px rgba(232,201,122,0.4);
+}
+
+/* 横向条形图 */
+.bar-chart { display:flex; flex-direction:column; gap:7px; }
+.bar-row { display:flex; align-items:center; gap:10px; }
+.bar-label { font-size:10px; color:var(--text2); width:90px; flex-shrink:0; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar-track { flex:1; height:8px; background:rgba(255,255,255,0.04); border-radius:4px; overflow:hidden; }
+.bar-fill  { height:100%; border-radius:4px; transition:width 0.6s cubic-bezier(0.34,1.2,0.64,1); }
+.bar-count { font-size:10px; color:var(--text3); font-family:'Syne',sans-serif; font-weight:600; width:20px; text-align:right; }
+
+/* 柱状图 */
+.col-chart { display:flex; align-items:flex-end; gap:6px; height:100px; padding-top:10px; }
+.col-wrap  { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+.col-bar   { width:100%; border-radius:3px 3px 0 0; min-height:2px; transition:height 0.6s cubic-bezier(0.34,1.2,0.64,1); }
+.col-val   { font-family:'Syne',sans-serif; font-size:9px; color:var(--text3); }
+.col-lbl   { font-size:9px; color:var(--text3); }
+
+/* 环形图 */
+.donut-wrap { display:flex; align-items:center; gap:20px; }
+.donut-svg  { flex-shrink:0; }
+.donut-legend { display:flex; flex-direction:column; gap:7px; flex:1; }
+.donut-legend-item { display:flex; align-items:center; gap:8px; }
+.donut-legend-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.donut-legend-label{ font-size:11px; color:var(--text2); flex:1; }
+.donut-legend-val  { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:var(--text); }
+
 /* D3 animations */
 @keyframes nodePulse { 0%,100%{opacity:0.10} 50%{opacity:0} }
 
@@ -947,6 +1185,20 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
       </div>
     </div>
 
+    <!-- Global Search -->
+    <div class="global-search-wrap">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <circle cx="5" cy="5" r="3.5" stroke="rgba(232,201,122,0.4)" stroke-width="1.2"/>
+        <line x1="8" y1="8" x2="11.5" y2="11.5" stroke="rgba(232,201,122,0.4)" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <input class="global-search" id="global-search"
+        placeholder="搜索联系人…"
+        oninput="onGlobalSearch()"
+        onkeydown="onGlobalSearchKey(event)"
+        autocomplete="off">
+      <div class="search-dropdown" id="search-dropdown" style="display:none"></div>
+    </div>
+
     <div class="sidebar-stats">
       <div class="stat-row">
         <span class="stat-row-lbl">联系人</span>
@@ -962,12 +1214,12 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
       </div>
     </div>
 
-    <!-- Nav items -->
+    <!-- Nav items — accordion style -->
     <div class="nav-section" style="margin-top:12px">
       <div class="nav-section-lbl">功能</div>
 
       <!-- Graph -->
-      <div class="nav-item active" id="nav-graph" onclick="setPage('graph')">
+      <div class="nav-item open" id="nav-graph" onclick="toggleAccordion('graph')">
         <div class="nav-item-icon">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.2"/>
@@ -982,10 +1234,25 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
           </svg>
         </div>
         <span class="nav-item-label">关系图谱</span>
+        <svg class="nav-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <polyline points="3,2 7,5 3,8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="accordion-sub open" id="sub-graph">
+        <div class="sort-section" style="padding-top:2px">
+          <div class="sort-item active" id="gv-graph" onclick="setGraphView('graph')">
+            <div class="sort-dot" style="background:var(--cyan);color:var(--cyan)"></div>
+            <span class="sort-item-label">神经网络</span>
+          </div>
+          <div class="sort-item" id="gv-orbit" onclick="setGraphView('orbit')">
+            <div class="sort-dot" style="background:rgba(200,215,255,0.4)"></div>
+            <span class="sort-item-label">轨道层级</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Contacts list -->
-      <div class="nav-item" id="nav-contacts" onclick="setPage('contacts')">
+      <!-- Contacts -->
+      <div class="nav-item" id="nav-contacts" onclick="toggleAccordion('contacts')">
         <div class="nav-item-icon">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
@@ -993,11 +1260,43 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
           </svg>
         </div>
         <span class="nav-item-label">联系人列表</span>
-        <span class="nav-badge" id="nav-badge">0</span>
+        <span class="nav-badge" id="nav-badge" style="margin-left:auto">0</span>
+        <svg class="nav-item-arrow" style="margin-left:4px" width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <polyline points="3,2 7,5 3,8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="accordion-sub" id="sub-contacts">
+        <div class="sort-section" style="padding-top:2px">
+          <div class="sort-item active" id="sort-strength" onclick="setSort('strength')">
+            <div class="sort-dot" style="background:var(--cyan);color:var(--cyan)"></div>
+            <span class="sort-item-label">关系强度</span>
+          </div>
+          <div class="sort-item" id="sort-name" onclick="setSort('name')">
+            <div class="sort-dot" style="background:rgba(200,215,255,0.4)"></div>
+            <span class="sort-item-label">姓名</span>
+          </div>
+          <div class="sort-item" id="sort-income" onclick="setSort('income')">
+            <div class="sort-dot" style="background:var(--gold)"></div>
+            <span class="sort-item-label">收入层级</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Followup -->
+      <div class="nav-item" id="nav-followup" onclick="setPage('followup')">
+        <div class="nav-item-icon">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="6.5" y1="3.5" x2="6.5" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="6.5" y1="7" x2="8.5" y2="9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="nav-item-label">待跟进</span>
+        <span class="nav-badge" id="followup-badge" style="display:none">0</span>
       </div>
 
       <!-- Data management -->
-      <div class="nav-item" id="nav-data" onclick="setPage('data')">
+      <div class="nav-item" id="nav-data" onclick="toggleAccordion('data')">
         <div class="nav-item-icon">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <ellipse cx="6.5" cy="3.5" rx="4.5" ry="2" stroke="currentColor" stroke-width="1.1"/>
@@ -1006,41 +1305,35 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
           </svg>
         </div>
         <span class="nav-item-label">数据管理</span>
+        <svg class="nav-item-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <polyline points="3,2 7,5 3,8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
-    </div>
+      <div class="accordion-sub" id="sub-data">
+        <div class="sort-section" style="padding-top:2px">
+          <div class="sort-item" id="dsub-overview" onclick="setPage('data-overview')">
+            <div class="sort-dot" style="background:var(--cyan)"></div>
+            <span class="sort-item-label">数据概览</span>
+          </div>
+          <div class="sort-item" id="dsub-charts" onclick="setPage('data-charts')">
+            <div class="sort-dot" style="background:rgba(200,215,255,0.4)"></div>
+            <span class="sort-item-label">行业分布</span>
+          </div>
+          <div class="sort-item" id="dsub-backup" onclick="setPage('data-backup')">
+            <div class="sort-dot" style="background:rgba(200,215,255,0.4)"></div>
+            <span class="sort-item-label">备份与恢复</span>
+          </div>
+          <div class="sort-item" id="dsub-demo" onclick="setPage('data-demo')" style="display:none">
+            <div class="sort-dot" style="background:rgba(200,215,255,0.4)"></div>
+            <span class="sort-item-label">示例数据</span>
+          </div>
+          <div class="sort-item" id="dsub-danger" onclick="setPage('data-danger')">
+            <div class="sort-dot" style="background:var(--rose)"></div>
+            <span class="sort-item-label">危险区域</span>
+          </div>
+        </div>
+      </div>
 
-    <!-- Sort section (only relevant for contacts page) -->
-    <div class="nav-section" id="sort-section" style="margin-top:8px; display:none">
-      <div class="nav-section-lbl">排序方式</div>
-      <div class="sort-section">
-        <div class="sort-item active" id="sort-strength" onclick="setSort('strength')">
-          <div class="sort-dot" style="background:var(--cyan);color:var(--cyan)"></div>
-          <span class="sort-item-label">关系强度</span>
-        </div>
-        <div class="sort-item" id="sort-name" onclick="setSort('name')">
-          <div class="sort-dot" style="background:rgba(200,215,255,0.4);color:rgba(200,215,255,0.4)"></div>
-          <span class="sort-item-label">姓名</span>
-        </div>
-        <div class="sort-item" id="sort-income" onclick="setSort('income')">
-          <div class="sort-dot" style="background:var(--gold);color:var(--gold)"></div>
-          <span class="sort-item-label">收入层级</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Graph sub-views (only relevant for graph page) -->
-    <div class="nav-section" id="graph-section" style="margin-top:8px">
-      <div class="nav-section-lbl">图谱视图</div>
-      <div class="sort-section">
-        <div class="sort-item active" id="gv-graph" onclick="setGraphView('graph')">
-          <div class="sort-dot" style="background:var(--cyan);color:var(--cyan)"></div>
-          <span class="sort-item-label">神经网络</span>
-        </div>
-        <div class="sort-item" id="gv-orbit" onclick="setGraphView('orbit')">
-          <div class="sort-dot" style="background:rgba(200,215,255,0.4);color:rgba(200,215,255,0.4)"></div>
-          <span class="sort-item-label">轨道层级</span>
-        </div>
-      </div>
     </div>
 
     <div class="sidebar-footer">
@@ -1154,57 +1447,37 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
     </div>
 
     <!-- Data management page -->
-    <div class="data-wrap" id="page-data" style="display:none">
-      <div>
-        <div class="data-page-title">数据管理</div>
-        <div class="data-page-sub">备份、恢复、管理你的人脉数据</div>
-      </div>
-
-      <!-- Overview -->
+    <!-- data-overview -->
+    <div class="data-wrap" id="page-data-overview" style="display:none">
+      <div><div class="data-page-title">数据概览</div><div class="data-page-sub">你的人脉数据一览</div></div>
       <div class="data-section">
-        <div class="data-section-header">
-          <div class="data-section-icon">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <rect x="1" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
-              <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
-              <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
-              <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.1"/>
-            </svg>
-          </div>
-          <span class="data-section-title">数据概览</span>
-        </div>
-        <div class="data-section-body">
-          <div class="data-stats-grid" id="data-stats-grid"></div>
-        </div>
+        <div class="data-section-body"><div class="data-stats-grid" id="data-stats-grid"></div></div>
       </div>
+    </div>
 
-      <!-- Backup & Restore -->
+    <!-- data-charts -->
+    <div class="data-wrap" id="page-data-charts" style="display:none">
+      <div><div class="data-page-title">人脉分析</div><div class="data-page-sub">了解你的人脉圈结构</div></div>
+      <div id="charts-section" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <!-- data-backup -->
+    <div class="data-wrap" id="page-data-backup" style="display:none">
+      <div><div class="data-page-title">备份与恢复</div><div class="data-page-sub">数据仅存于本地设备</div></div>
       <div class="data-section">
-        <div class="data-section-header">
-          <div class="data-section-icon">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path d="M6.5 1v7M4 6l2.5 2.5L9 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M1 10.5h11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="data-section-title">备份与恢复</span>
-          <span class="data-section-desc">数据仅存于本地设备</span>
-        </div>
         <div class="data-section-body">
           <div class="data-actions">
             <button class="data-btn export" onclick="exportData()">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                 <path d="M6.5 1v7M4 6l2.5 2.5L9 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M1 10.5h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-              </svg>
-              导出备份
+              </svg>导出备份
             </button>
             <button class="data-btn import" onclick="document.getElementById('import-input').click()">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                 <path d="M6.5 8.5V1.5M4 4l2.5-2.5L9 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M1 10.5h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-              </svg>
-              导入恢复
+              </svg>导入恢复
             </button>
             <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
           </div>
@@ -1214,48 +1487,41 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Clear demo data -->
-      <div class="data-section" id="demo-section" style="display:none">
-        <div class="data-section-header">
-          <div class="data-section-icon" style="background:rgba(232,201,122,0.08);border-color:rgba(232,201,122,0.16);color:var(--cyan)">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.1"/>
-              <line x1="4.5" y1="6.5" x2="8.5" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="data-section-title">示例数据</span>
-        </div>
+    <!-- data-demo -->
+    <div class="data-wrap" id="page-data-demo" style="display:none">
+      <div><div class="data-page-title">示例数据</div><div class="data-page-sub">清除演示数据，开始录入真实人脉</div></div>
+      <div class="data-section">
         <div class="data-section-body">
           <div class="data-danger-desc" style="color:var(--text3)">当前数据为演示用示例，你可以清除它们并开始录入真实的人脉。</div>
-          <button class="data-btn import" onclick="clearDemoData()" style="max-width:200px;flex:none">
-            清除示例数据
-          </button>
+          <button class="data-btn import" onclick="clearDemoData()" style="max-width:200px;flex:none">清除示例数据</button>
         </div>
       </div>
+    </div>
 
-      <!-- Danger zone -->
+    <!-- data-danger -->
+    <div class="data-wrap" id="page-data-danger" style="display:none">
+      <div><div class="data-page-title" style="color:var(--rose)">危险区域</div><div class="data-page-sub">不可撤销的操作，请谨慎</div></div>
       <div class="data-section">
-        <div class="data-section-header">
-          <div class="data-section-icon" style="background:rgba(224,112,112,0.10);border-color:rgba(224,112,112,0.20);color:var(--rose)">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path d="M6.5 1L12 11.5H1L6.5 1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-              <line x1="6.5" y1="5" x2="6.5" y2="8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              <circle cx="6.5" cy="9.5" r="0.6" fill="currentColor"/>
-            </svg>
-          </div>
-          <span class="data-section-title" style="color:var(--rose)">危险区域</span>
-        </div>
         <div class="data-section-body">
           <div class="data-danger-desc">清空后所有联系人数据将永久删除，操作不可撤销。建议在清空前先导出备份。</div>
           <button class="data-danger-btn" onclick="clearAllData()">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <path d="M2 3.5h9M5 3.5V2h3v1.5M10.5 3.5l-.5 8h-7l-.5-8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            清空所有数据
+            </svg>清空所有数据
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Followup page -->
+    <div class="followup-wrap" id="page-followup" style="display:none">
+      <div class="followup-header">
+        <div class="followup-title">待跟进</div>
+        <div class="followup-count" id="followup-count">0 人待跟进</div>
+      </div>
+      <div class="followup-list" id="followup-list"></div>
     </div>
 
   </main>
@@ -1377,6 +1643,34 @@ input[type=range]:hover::-webkit-slider-thumb { box-shadow:0 0 20px rgba(232,201
         <input type="range" min="1" max="10" value="5" id="f-strength"
           oninput="this.style.setProperty('--pct',(this.value-1)/9*100+'%');document.getElementById('strength-num').textContent=this.value">
       </div>
+      <!-- 最后联系 & 跟进周期 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-lbl">最后联系日期</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="form-input" type="date" id="f-last-contact" style="flex:1">
+            <button type="button" style="font-family:'Syne',sans-serif;font-size:9px;font-weight:600;padding:9px 10px;background:rgba(232,201,122,0.10);border:1px solid rgba(232,201,122,0.22);color:var(--cyan);border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap;letter-spacing:0.06em" onclick="document.getElementById('f-last-contact').value=new Date().toISOString().slice(0,10)">今天</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">跟进周期</label>
+          <select class="form-select" id="f-follow-cycle">
+            <option value="">不设定</option>
+            <option value="7">每周</option>
+            <option value="30">每月</option>
+            <option value="90">每季度</option>
+            <option value="180">每半年</option>
+            <option value="365">每年</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 关联关系 -->
+      <div class="relations-section">
+        <div class="relations-lbl">关联关系（与其他联系人的连接）</div>
+        <div class="relations-list" id="f-relations-list"></div>
+      </div>
+
       <div class="form-row full">
         <div class="form-group"><label class="form-lbl">备注</label><textarea class="form-textarea" id="f-notes" placeholder="关系脉络、合作潜力、跟进计划…"></textarea></div>
       </div>
@@ -1443,12 +1737,19 @@ function getDemo() {
 // ── Welcome page ──────────────────────────────────────────────
 function showWelcome() {
   // 隐藏所有页面，显示欢迎页，隐藏侧边栏子菜单
-  ['page-graph','page-contacts','page-data'].forEach(id=>{
+  ['page-graph','page-contacts','page-followup',
+   'page-data-overview','page-data-charts','page-data-backup','page-data-demo','page-data-danger'
+  ].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
   document.getElementById('page-welcome').style.display = 'flex';
-  document.getElementById('sort-section').style.display  = 'none';
-  document.getElementById('graph-section').style.display = 'none';
+  // 收起所有手风琴子菜单
+  ['sub-graph','sub-contacts','sub-data'].forEach(id=>{
+    document.getElementById(id)?.classList.remove('open');
+  });
+  ['nav-graph','nav-contacts','nav-data'].forEach(id=>{
+    document.getElementById(id)?.classList.remove('open','active');
+  });
   // 清除所有 nav active
   ['nav-graph','nav-contacts','nav-data'].forEach(id=>{
     document.getElementById(id)?.classList.remove('active');
@@ -1460,26 +1761,77 @@ function dismissWelcome() {
   setTimeout(()=>openModal(), 300);
 }
 
+// ── Accordion nav ────────────────────────────────────────────
+function toggleAccordion(key) {
+  const subMap = { graph:'sub-graph', contacts:'sub-contacts', data:'sub-data' };
+  const navMap = { graph:'nav-graph', contacts:'nav-contacts', data:'nav-data' };
+  const pageMap = { graph:'graph', contacts:'contacts', data:'data-overview' };
+
+  const sub = document.getElementById(subMap[key]);
+  const nav = document.getElementById(navMap[key]);
+  const isOpen = sub && sub.classList.contains('open');
+
+  if (isOpen) {
+    // 已展开则收起（但不切换页面）
+    sub.classList.remove('open');
+    nav.classList.remove('open');
+  } else {
+    // 展开并进入默认子页
+    // 收起其他已展开的
+    ['graph','contacts','data'].forEach(k => {
+      const s = document.getElementById(subMap[k]);
+      const n = document.getElementById(navMap[k]);
+      if (s) s.classList.remove('open');
+      if (n) n.classList.remove('open');
+    });
+    if (sub) sub.classList.add('open');
+    if (nav) nav.classList.add('open');
+    setPage(pageMap[key]);
+  }
+}
+
 function setPage(p) {
   page = p;
   // nav highlight
-  document.getElementById('nav-contacts').classList.toggle('active', p==='contacts');
-  document.getElementById('nav-graph').classList.toggle('active', p==='graph');
-  document.getElementById('nav-data').classList.toggle('active', p==='data');
-  // show/hide center panels
-  document.getElementById('page-welcome').style.display  = 'none';
-  document.getElementById('page-graph').style.display    = p==='graph'    ? 'flex' : 'none';
-  document.getElementById('page-contacts').style.display = p==='contacts' ? 'flex' : 'none';
-  document.getElementById('page-data').style.display     = p==='data'     ? 'flex' : 'none';
+  const isData = p.startsWith('data-');
+  const isGraph = p==='graph';
+  const isContacts = p==='contacts';
+  // active 高亮
+  document.getElementById('nav-contacts').classList.toggle('active', isContacts);
+  document.getElementById('nav-graph').classList.toggle('active', isGraph);
+  document.getElementById('nav-data').classList.toggle('active', isData);
+  document.getElementById('nav-followup').classList.toggle('active', p==='followup');
+  // 同步手风琴展开状态
+  if (isGraph)    { document.getElementById('sub-graph').classList.add('open');    document.getElementById('nav-graph').classList.add('open'); }
+  if (isContacts) { document.getElementById('sub-contacts').classList.add('open'); document.getElementById('nav-contacts').classList.add('open'); }
+  if (isData)     { document.getElementById('sub-data').classList.add('open');     document.getElementById('nav-data').classList.add('open'); }
+  // show/hide center panels — hide all first
+  ['page-welcome','page-graph','page-contacts','page-followup',
+   'page-data-overview','page-data-charts','page-data-backup','page-data-demo','page-data-danger'
+  ].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  // show current
+  if (p==='graph')    document.getElementById('page-graph').style.display    = 'flex';
+  if (p==='contacts') document.getElementById('page-contacts').style.display = 'flex';
+  if (p==='followup') document.getElementById('page-followup').style.display = 'flex';
+  if (isData) { const el=document.getElementById('page-'+p); if(el) el.style.display='flex'; }
   // show/hide sidebar sub-sections
-  document.getElementById('sort-section').style.display  = p==='contacts' ? 'block' : 'none';
-  document.getElementById('graph-section').style.display = p==='graph'    ? 'block' : 'none';
+  // 示例数据子菜单：有示例数据才显示
+  const hasDemo = people.some(x=>['d1','d2','d3','d4','d5','d6'].includes(x.id));
+  const demoNav = document.getElementById('dsub-demo');
+  if (demoNav) demoNav.style.display = hasDemo ? 'flex' : 'none';
+  // highlight data sub-menu item
+  ['overview','charts','backup','demo','danger'].forEach(sub=>{
+    const el=document.getElementById('dsub-'+sub);
+    if(el) el.classList.toggle('active', p==='data-'+sub);
+  });
   // Clear selection and collapse detail panel on page switch
   selected = null;
   renderDetail();
-  if (p === 'graph') { renderGraph(); }
-  if (p === 'contacts') { renderContacts(); }
-  if (p === 'data') { renderDataPage(); }
+  if (p === 'graph')         { renderGraph(); }
+  if (p === 'contacts')      { renderContacts(); }
+  if (p === 'data-overview') { renderDataOverview(); }
+  if (p === 'data-charts')   { renderCharts(); }
+  if (p === 'followup')      { renderFollowup(); }
 }
 
 // ── Graph sub-view ─────────────────────────────────────────────
@@ -1489,14 +1841,22 @@ function setGraphView(v) {
   document.getElementById('gv-orbit').classList.toggle('active', v==='orbit');
   document.getElementById('tb-graph').classList.toggle('active', v==='graph');
   document.getElementById('tb-orbit').classList.toggle('active', v==='orbit');
-  renderGraph();
+  // 确保图谱手风琴展开
+  document.getElementById('sub-graph')?.classList.add('open');
+  document.getElementById('nav-graph')?.classList.add('open','active');
+  if (page !== 'graph') setPage('graph');
+  else renderGraph();
 }
 
 // ── Sort ───────────────────────────────────────────────────────
 function setSort(k) {
   sortKey = k;
   ['strength','name','income'].forEach(id => document.getElementById('sort-'+id).classList.toggle('active', id===k));
-  renderContacts();
+  // 确保联系人手风琴展开
+  document.getElementById('sub-contacts')?.classList.add('open');
+  document.getElementById('nav-contacts')?.classList.add('open','active');
+  if (page !== 'contacts') setPage('contacts');
+  else renderContacts();
 }
 
 // ── Stats ──────────────────────────────────────────────────────
@@ -1525,6 +1885,9 @@ function openModal(id) {
     document.getElementById('f-need').value    = p.need||'';
     document.getElementById('f-value').value   = p.value||'';
     document.getElementById('f-notes').value   = p.notes||'';
+    renderRelationsPicker(p.id, p.relations||[]);
+    document.getElementById('f-last-contact').value = p.lastContact||'';
+    document.getElementById('f-follow-cycle').value = p.followCycle||'';
     const s = document.getElementById('f-strength');
     s.value = p.strength; s.style.setProperty('--pct',(p.strength-1)/9*100+'%');
     document.getElementById('strength-num').textContent = p.strength;
@@ -1532,6 +1895,9 @@ function openModal(id) {
     document.getElementById('modal-title').textContent = '添加联系人';
     document.getElementById('fid').value = '';
     ['f-name','f-job','f-family','f-phone','f-tags','f-need','f-value','f-notes'].forEach(id=>document.getElementById(id).value='');
+    renderRelationsPicker(null, []);
+    document.getElementById('f-last-contact').value = '';
+    document.getElementById('f-follow-cycle').value = '';
     document.getElementById('f-industry').value = '';
     document.getElementById('f-income').value   = 0;
     document.getElementById('f-how').value      = '';
@@ -1563,8 +1929,11 @@ function savePerson() {
     tags, 
     need:     document.getElementById('f-need').value.trim(),
     value:    document.getElementById('f-value').value.trim(),
-    bonds:    (people.find(x=>x.id===id)||{}).bonds || [],
-    notes:    document.getElementById('f-notes').value.trim(),
+    bonds:     (people.find(x=>x.id===id)||{}).bonds || [],
+    relations:   getRelationsFromPicker(),
+    lastContact: document.getElementById('f-last-contact').value||'',
+    followCycle: document.getElementById('f-follow-cycle').value||'',
+    notes:       document.getElementById('f-notes').value.trim(),
     strength: parseInt(document.getElementById('f-strength').value)
   };
   const now = new Date().toISOString();
@@ -1574,6 +1943,76 @@ function savePerson() {
   const idx = people.findIndex(x=>x.id===id);
   if (idx>=0) people[idx]=p; else people.push(p);
   save(); closeModal(); render();
+}
+
+// ── Relations display (detail panel) ─────────────────────────
+function renderRelationsDisplay(p) {
+  const rels = (p.relations||[]).filter(r => people.find(x=>x.id===r.id));
+  if (!rels.length) return '';
+  const items = rels.map(r => {
+    const rp = people.find(x=>x.id===r.id);
+    const c  = getColor(rp);
+    return '<div style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07)">'
+      + '<span style="font-size:10px;color:'+c+'">'+rp.name+'</span>'
+      + '<span style="font-size:9px;color:var(--text3)">'+r.type+'</span>'
+      + '</div>';
+  }).join('');
+  return '<div class="dc-notes-lbl">关联关系</div>'
+       + '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">' + items + '</div>';
+}
+
+// ── Relations picker ─────────────────────────────────────────
+const REL_TYPES = ['介绍认识','同学','同事','合作伙伴','家人朋友','其他'];
+
+function renderRelationsPicker(currentId, savedRelations) {
+  const list = document.getElementById('f-relations-list');
+  if (!list) return;
+
+  // 排除当前编辑的人，列出所有其他联系人
+  const others = people.filter(p => p.id !== currentId);
+  if (!others.length) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:6px 2px">暂无其他联系人</div>';
+    return;
+  }
+
+  list.innerHTML = others.map(p => {
+    const c = getColor(p);
+    const saved = savedRelations.find(r => r.id === p.id);
+    const isSelected = !!saved;
+    const relType = saved ? saved.type : '介绍认识';
+    return `<div class="relation-item${isSelected?' selected':''}" id="rel-item-${p.id}" onclick="toggleRelation('${p.id}')">
+      <div class="relation-item-avatar" style="background:${c}18;color:${c}">${p.name[0]}</div>
+      <div class="relation-item-name">${p.name}</div>
+      <select class="relation-type-select" id="rel-type-${p.id}" onclick="event.stopPropagation()">
+        ${REL_TYPES.map(t=>`<option value="${t}"${t===relType?' selected':''}>${t}</option>`).join('')}
+      </select>
+      <div class="relation-check">
+        ${isSelected?'<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><polyline points="1,4 3,6 7,2" stroke="rgba(232,201,122,0.9)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRelation(pid) {
+  const item = document.getElementById('rel-item-'+pid);
+  if (!item) return;
+  item.classList.toggle('selected');
+  const check = item.querySelector('.relation-check');
+  const isNowSelected = item.classList.contains('selected');
+  check.innerHTML = isNowSelected
+    ? '<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><polyline points="1,4 3,6 7,2" stroke="rgba(232,201,122,0.9)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    : '';
+}
+
+function getRelationsFromPicker() {
+  const list = document.getElementById('f-relations-list');
+  if (!list) return [];
+  const items = list.querySelectorAll('.relation-item.selected');
+  return Array.from(items).map(item => {
+    const id = item.id.replace('rel-item-','');
+    const typeEl = item.querySelector('.relation-type-select');
+    return { id, type: typeEl ? typeEl.value : '介绍认识' };
+  });
 }
 
 // ── Bond timeline ──────────────────────────────────────────────
@@ -1633,7 +2072,34 @@ function deletePerson(id) {
 }
 
 // ── Select person ──────────────────────────────────────────────
+function selectPerson(id) {
+  selected = id;
+  renderDetail();
+  const app = document.getElementById('app');
+  app.style.gridTemplateColumns = 'var(--sidebar-w) 1fr var(--detail-w)';
+  document.querySelector('.detail').classList.add('visible');
+  if (page === 'contacts') renderContacts();
+  if (page === 'followup') renderFollowup();
+  if (page === 'graph') {
+    highlightNode(id);
+    app.addEventListener('transitionend', function onEnd(e) {
+      if (e.propertyName === 'grid-template-columns') {
+        app.removeEventListener('transitionend', onEnd);
+        renderGraph();
+      }
+    });
+  }
+}
+
 // ── Detail panel ───────────────────────────────────────────────
+function renderContactBtn(pid) {
+  return '<button class="dc-contact-btn" onclick="markContacted(\'' + pid + '\')">'
+    + '<svg width="12" height="12" viewBox="0 0 12 12" fill="none">'
+    + '<circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/>'
+    + '<polyline points="3.5,6 5.5,8 8.5,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg> ✓ 今天联系了</button>';
+}
+
 function renderDetail() {
   const wrap = document.getElementById('detail-body');
   if (!selected) {
@@ -1666,15 +2132,19 @@ function renderDetail() {
       </div>
       <div class="dc-track" style="width:100%"><div class="dc-fill" style="width:${p.strength*10}%;background:linear-gradient(90deg,${c},#00ffd5)"></div></div>
     </div>
+    ${p.followCycle ? renderContactBtn(p.id) : ''}
     <div class="dc-grid">
       <div class="dc-cell"><div class="dc-lbl">收入层级</div><div class="dc-val">${p.income?'L'+p.income+' '+INCOME_LBL[p.income]:'未填写'}</div></div>
       <div class="dc-cell"><div class="dc-lbl">认识方式</div><div class="dc-val">${p.how||'未填写'}</div></div>
       <div class="dc-cell full"><div class="dc-lbl">家庭状况</div><div class="dc-val">${p.family||'未填写'}</div></div>
       <div class="dc-cell full"><div class="dc-lbl">电话</div><div class="dc-val">${p.phone||'未填写'}</div></div>
+      <div class="dc-cell"><div class="dc-lbl">上次联系</div><div class="dc-val" style="font-size:11px">${p.lastContact||'未记录'}</div></div>
+      <div class="dc-cell"><div class="dc-lbl">跟进周期</div><div class="dc-val" style="font-size:11px">${{'7':'每周','30':'每月','90':'每季度','180':'每半年','365':'每年'}[p.followCycle]||'未设定'}</div></div>
       <div class="dc-cell"><div class="dc-lbl">创建时间</div><div class="dc-val" style="font-size:11px">${p.createdAt ? fmtDate(p.createdAt) : '—'}</div></div>
       <div class="dc-cell"><div class="dc-lbl">最后更新</div><div class="dc-val" style="font-size:11px">${p.updatedAt ? fmtDate(p.updatedAt) : '—'}</div></div>
     </div>
     ${(p.tags||[]).length?`<div class="dc-tags">${p.tags.map(t=>`<span class="dc-tag">${t}</span>`).join('')}</div>`:''}
+    ${renderRelationsDisplay(p)}
     ${p.need?`<div class="dc-notes-lbl">他的需求</div><div class="dc-notes">${p.need}</div>`:''}
     ${p.value?`<div class="dc-notes-lbl">我的价值</div><div class="dc-notes" style="border-left-color:rgba(232,201,122,0.40)">${p.value}</div>`:''}
     <div class="bond-section">
@@ -1709,14 +2179,116 @@ function renderDetail() {
   </div>`;
 }
 
+// ── Global Search ────────────────────────────────────────────
+let _searchTimer = null;
+
+function onGlobalSearch() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => {
+    const q = document.getElementById('global-search').value.trim().toLowerCase();
+    const dropdown = document.getElementById('search-dropdown');
+
+    if (!q) {
+      dropdown.style.display = 'none';
+      // 清空搜索时恢复图谱节点
+      clearGraphHighlight();
+      // 同步到联系人列表搜索框
+      const cs = document.getElementById('contacts-search');
+      if (cs) { cs.value = ''; renderContacts(); }
+      return;
+    }
+
+    const matched = people.filter(p => matchesQuery(p, q));
+
+    // 同步到联系人列表
+    const cs = document.getElementById('contacts-search');
+    if (cs) { cs.value = q; if (page==='contacts') renderContacts(); }
+
+    // 图谱高亮
+    if (page === 'graph') highlightGraphNodes(matched.map(p=>p.id));
+
+    // 显示下拉结果
+    if (!matched.length) {
+      dropdown.innerHTML = '<div class="search-result-empty">无匹配结果</div>';
+    } else {
+      dropdown.innerHTML = matched.slice(0,8).map(p => {
+        const c = getColor(p);
+        return `<div class="search-result-item" onclick="selectFromSearch('${p.id}')">
+          <div class="search-result-avatar" style="background:${c}18;color:${c}">${p.name[0]}</div>
+          <div>
+            <div class="search-result-name">${p.name}</div>
+            <div class="search-result-sub">${[p.job,p.industry].filter(Boolean).join(' · ')||'—'}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    dropdown.style.display = 'block';
+  }, 180);
+}
+
+function onGlobalSearchKey(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('global-search').value = '';
+    onGlobalSearch();
+    document.getElementById('global-search').blur();
+  }
+}
+
+function selectFromSearch(id) {
+  // 关闭下拉
+  document.getElementById('search-dropdown').style.display = 'none';
+  // 切到对应页面并选中
+  if (page !== 'graph' && page !== 'contacts') setPage('graph');
+  selectPerson(id);
+  if (page === 'graph') highlightGraphNodes([id]);
+}
+
+// 点击其他地方关闭下拉
+document.addEventListener('click', e => {
+  if (!e.target.closest('.global-search-wrap')) {
+    document.getElementById('search-dropdown').style.display = 'none';
+  }
+});
+
+// ── Graph highlight ────────────────────────────────────────────
+function highlightGraphNodes(ids) {
+  if (!ids || !ids.length) { clearGraphHighlight(); return; }
+  d3.selectAll('.node-group').each(function(d) {
+    if (!d) return;
+    const matched = ids.includes(d.id);
+    const el = d3.select(this);
+    el.style('opacity', d.isMe ? 1 : (matched ? 1 : 0.15));
+    el.select('.node-main')
+      .attr('stroke-width', matched ? 2.5 : (d.isMe ? 1.5 : 1))
+      .attr('stroke-opacity', matched ? 1 : 0.4);
+  });
+}
+
+function clearGraphHighlight() {
+  d3.selectAll('.node-group')
+    .style('opacity', 1)
+    .select('.node-main')
+    .attr('stroke-width', function() {
+      const d = d3.select(this.parentNode).datum();
+      return d && d.isMe ? 1.5 : 1;
+    })
+    .attr('stroke-opacity', 0.7);
+}
+
 // ── Contacts page ──────────────────────────────────────────────
+function matchesQuery(p, q) {
+  if (!q) return true;
+  return p.name.toLowerCase().includes(q) ||
+    (p.job||'').toLowerCase().includes(q) ||
+    (p.industry||'').toLowerCase().includes(q) ||
+    (p.phone||'').includes(q) ||
+    (p.tags||[]).some(t => t.toLowerCase().includes(q)) ||
+    (p.notes||'').toLowerCase().includes(q);
+}
+
 function getSorted() {
   const q = (document.getElementById('contacts-search')?.value||'').toLowerCase();
-  let list = people.filter(p =>
-    p.name.toLowerCase().includes(q) ||
-    (p.job||'').toLowerCase().includes(q) ||
-    (p.industry||'').toLowerCase().includes(q)
-  );
+  let list = people.filter(p => matchesQuery(p, q));
   if (sortKey==='strength') list.sort((a,b)=>b.strength-a.strength);
   else if (sortKey==='name') list.sort((a,b)=>a.name.localeCompare(b.name,'zh'));
   else list.sort((a,b)=>b.income-a.income);
@@ -1795,7 +2367,19 @@ function renderGraph() {
 
 function doForce(g,W,H) {
   const nodes = [{id:'__me__',name:'我',isMe:true,x:W/2,y:H/2,fx:W/2,fy:H/2}, ...people.map(p=>({...p,isMe:false}))];
-  const links = people.map(p=>({source:'__me__',target:p.id,str:p.strength}));
+  // 我到每个联系人的连线
+  const links = people.map(p=>({source:'__me__',target:p.id,str:p.strength,isPeer:false}));
+  // 联系人之间的关系连线（去重）
+  const peerSet = new Set();
+  people.forEach(p => {
+    (p.relations||[]).forEach(r => {
+      const key = [p.id,r.id].sort().join('-');
+      if (!peerSet.has(key) && people.find(x=>x.id===r.id)) {
+        peerSet.add(key);
+        links.push({source:p.id, target:r.id, str:2, isPeer:true, relType:r.type});
+      }
+    });
+  });
 
   sim = d3.forceSimulation(nodes)
     .force('link', d3.forceLink(links).id(d=>d.id).distance(d=>280-d.str*18).strength(0.55))
@@ -1804,9 +2388,14 @@ function doForce(g,W,H) {
     .force('center', d3.forceCenter(W/2,H/2).strength(0.06));
 
   const link = g.append('g').selectAll('line').data(links).join('line')
-    .attr('stroke', d=>{const p=people.find(x=>x.id===(typeof d.target==='object'?d.target.id:d.target));return p?getColor(p):'#e8c97a';})
-    .attr('stroke-width', d=>d.str/4.5)
-    .attr('stroke-opacity', d=>0.08+d.str*0.022);
+    .attr('stroke', d => {
+      if (d.isPeer) return 'rgba(232,201,122,0.6)';
+      const pid = typeof d.target==='object' ? d.target.id : d.target;
+      const p = people.find(x=>x.id===pid); return p?getColor(p):'#e8c97a';
+    })
+    .attr('stroke-width', d => d.isPeer ? 1 : d.str/4.5)
+    .attr('stroke-opacity', d => d.isPeer ? 0.35 : 0.08+d.str*0.022)
+    .attr('stroke-dasharray', d => d.isPeer ? '4,3' : 'none');
 
   const node = g.append('g').selectAll('g').data(nodes).join('g').attr('class','node-group').style('cursor','pointer')
     .call(d3.drag()
@@ -1826,7 +2415,7 @@ function doForce(g,W,H) {
     el.append('text').attr('text-anchor','middle').attr('dy','0.35em')
       .attr('font-family','Syne,sans-serif').attr('font-weight','700')
       .attr('font-size',d.isMe?13:10).attr('fill',c).attr('pointer-events','none')
-      .text(d.isMe?'我':d.name.length>2?d.name.slice(0,2):d.name);
+      .text(d.isMe?'我':d.name.length>4?d.name.slice(0,4)+"…":d.name);
     if (!d.isMe) {
       el.append('circle').attr('r',7).attr('cx',r-1).attr('cy',-(r-1))
         .attr('fill','rgba(5,7,13,0.9)').attr('stroke',c).attr('stroke-width',0.5).attr('stroke-opacity',0.5);
@@ -1885,7 +2474,7 @@ function doOrbit(g,W,H) {
     nd.append('circle').attr('r',r).attr('fill',`${c}16`).attr('stroke',c).attr('stroke-width',1).attr('filter','url(#glow)');
     nd.append('text').attr('text-anchor','middle').attr('dy','0.35em')
       .attr('font-family','Syne,sans-serif').attr('font-size',10).attr('font-weight','700')
-      .attr('fill',c).attr('pointer-events','none').text(p.name.length>2?p.name.slice(0,2):p.name);
+      .attr('fill',c).attr('pointer-events','none').text(p.name.length>4?p.name.slice(0,4)+"…":p.name);
   });
 }
 
@@ -1921,30 +2510,127 @@ function showToast(icon, html) {
 }
 
 // ── Data page render ──────────────────────────────────────────
-function renderDataPage() {
+// ── Chart helpers ────────────────────────────────────────────
+const CHART_COLORS = [
+  '#e8c97a','#60a5fa','#f472b6','#4ade80','#fb923c',
+  '#a78bfa','#34d399','#f87171','#38bdf8','#fbbf24'
+];
+
+function renderCharts() {
+  const sec = document.getElementById('charts-section');
+  if (!sec) return;
+
+  // ── Chart 1: 行业分布（横向条形图）──
+  const indMap = {};
+  people.forEach(p => {
+    const k = p.industry||'未填写';
+    indMap[k] = (indMap[k]||0) + 1;
+  });
+  const indSorted = Object.entries(indMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const indMax = indSorted[0]?.[1] || 1;
+  const indBars = indSorted.map(([lbl,cnt],i) =>
+    '<div class="bar-row">'
+    + '<div class="bar-label" title="'+lbl+'">'+lbl+'</div>'
+    + '<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(cnt/indMax*100)+'%;background:'+CHART_COLORS[i%CHART_COLORS.length]+'"></div></div>'
+    + '<div class="bar-count">'+cnt+'</div>'
+    + '</div>'
+  ).join('');
+
+  // ── Chart 2: 关系强度分布（柱状图）──
+  const strMap = {};
+  for (let i=1;i<=10;i++) strMap[i]=0;
+  people.forEach(p=>{ strMap[p.strength]=(strMap[p.strength]||0)+1; });
+  const strMax = Math.max(...Object.values(strMap), 1);
+  const strCols = Object.entries(strMap).map(([lv,cnt]) => {
+    const h = cnt ? Math.max(Math.round(cnt/strMax*80),4) : 2;
+    const col = lv>=8 ? '#e8c97a' : lv>=5 ? '#60a5fa' : 'rgba(255,255,255,0.2)';
+    return '<div class="col-wrap">'
+      + (cnt?'<div class="col-val">'+cnt+'</div>':'')
+      + '<div class="col-bar" style="height:'+h+'px;background:'+col+'"></div>'
+      + '<div class="col-lbl">'+lv+'</div>'
+      + '</div>';
+  }).join('');
+
+  // ── Chart 3: 收入层级分布（环形图）──
+  const incLabels = ['未填写','<10万','10-30万','30-100万','100-500万','>500万'];
+  const incColors = ['rgba(255,255,255,0.15)','#60a5fa','#4ade80','#e8c97a','#fb923c','#f87171'];
+  const incMap = [0,1,2,3,4,5].map(i=>people.filter(p=>(p.income||0)===i).length);
+  const incTotal = incMap.reduce((a,b)=>a+b,0)||1;
+
+  // SVG 环形图
+  const R=42, r=26, cx=50, cy=50;
+  let startAngle = -Math.PI/2;
+  const slices = incMap.map((cnt,i)=>{
+    if(!cnt) return '';
+    const angle = (cnt/incTotal)*Math.PI*2;
+    const x1=cx+R*Math.cos(startAngle), y1=cy+R*Math.sin(startAngle);
+    const x2=cx+R*Math.cos(startAngle+angle), y2=cy+R*Math.sin(startAngle+angle);
+    const xi1=cx+r*Math.cos(startAngle), yi1=cy+r*Math.sin(startAngle);
+    const xi2=cx+r*Math.cos(startAngle+angle), yi2=cy+r*Math.sin(startAngle+angle);
+    const large = angle>Math.PI?1:0;
+    const path = 'M'+x1+','+y1+' A'+R+','+R+' 0 '+large+',1 '+x2+','+y2
+               +' L'+xi2+','+yi2+' A'+r+','+r+' 0 '+large+',0 '+xi1+','+yi1+' Z';
+    startAngle += angle;
+    return '<path d="'+path+'" fill="'+incColors[i]+'" opacity="0.85"/>';
+  }).join('');
+
+  const donutSvg = '<svg class="donut-svg" width="100" height="100" viewBox="0 0 100 100">'
+    + slices
+    + '<circle cx="50" cy="50" r="18" fill="rgba(8,8,8,0.9)"/>'
+    + '<text x="50" y="50" text-anchor="middle" dy="0.35em" font-family="Syne" font-size="11" font-weight="700" fill="#e4e4e7">'+incTotal+'</text>'
+    + '</svg>';
+
+  const donutLegend = incMap.map((cnt,i)=>{
+    if(!cnt) return '';
+    return '<div class="donut-legend-item">'
+      +'<div class="donut-legend-dot" style="background:'+incColors[i]+'"></div>'
+      +'<div class="donut-legend-label">'+incLabels[i]+'</div>'
+      +'<div class="donut-legend-val">'+cnt+'</div>'
+      +'</div>';
+  }).join('');
+
+  function makeSection(icon, title, bodyHtml) {
+    return '<div class="data-section">'
+      +'<div class="data-section-header">'
+        +'<div class="data-section-icon">'+icon+'</div>'
+        +'<span class="data-section-title">'+title+'</span>'
+      +'</div>'
+      +'<div class="data-section-body">'+bodyHtml+'</div>'
+    +'</div>';
+  }
+
+  const iconBar    = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="4" width="11" height="2" rx="1" fill="currentColor" opacity="0.4"/><rect x="1" y="7.5" width="8" height="2" rx="1" fill="currentColor" opacity="0.6"/><rect x="1" y="11" width="5.5" height="2" rx="1" fill="currentColor"/></svg>';
+  const iconCol    = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="7" width="2.5" height="5" rx="0.5" stroke="currentColor" stroke-width="1.1"/><rect x="5.25" y="4" width="2.5" height="8" rx="0.5" stroke="currentColor" stroke-width="1.1"/><rect x="9.5" y="1.5" width="2.5" height="10.5" rx="0.5" stroke="currentColor" stroke-width="1.1"/></svg>';
+  const iconDonut  = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.1"/><circle cx="6.5" cy="6.5" r="2.5" stroke="currentColor" stroke-width="1.1"/></svg>';
+
+  sec.innerHTML =
+    makeSection(iconBar,   '行业分布',    '<div class="bar-chart">'+indBars+'</div>')
+  + makeSection(iconCol,   '关系强度分布','<div class="col-chart">'+strCols+'</div>')
+  + makeSection(iconDonut, '收入层级分布','<div class="donut-wrap">'+donutSvg+'<div class="donut-legend">'+donutLegend+'</div></div>');
+}
+
+function renderDataOverview() {
   const grid = document.getElementById('data-stats-grid');
   if (!grid) return;
-  // 检测示例数据（以 d1 d2 等 ID 为标志）
-  const hasDemo = people.some(p=>['d1','d2','d3','d4','d5','d6'].includes(p.id));
-  const demoSec = document.getElementById('demo-section');
-  if (demoSec) demoSec.style.display = hasDemo ? 'block' : 'none';
   const bondCount = people.reduce((s,p)=>s+(p.bonds||[]).length, 0);
-  // 最早创建时间
-  const dates = people.map(p=>p.createdAt).filter(Boolean).sort();
-  const earliest = dates.length ? fmtDate(dates[0]).slice(0,10) : '—';
-
+  const dates     = people.map(p=>p.createdAt).filter(Boolean).sort();
+  const earliest  = dates.length ? fmtDate(dates[0]).slice(0,10) : '—';
   const stats = [
-    { val: people.length,                                 lbl: '联系人总数' },
-    { val: bondCount,                                     lbl: '情分记录' },
-    { val: people.filter(p=>p.strength>=8).length,        lbl: '核心关系' },
-    { val: earliest,                                      lbl: '最早录入' },
+    { val: people.length,                          lbl: '联系人总数' },
+    { val: bondCount,                              lbl: '情分记录' },
+    { val: people.filter(p=>p.strength>=8).length, lbl: '核心关系' },
+    { val: earliest,                               lbl: '最早录入' },
   ];
-  grid.innerHTML = stats.map(s=>`
-    <div class="data-stat-card">
-      <div class="data-stat-val">${s.val}</div>
-      <div class="data-stat-lbl">${s.lbl}</div>
-    </div>`).join('');
+  grid.innerHTML = stats.map(s=>
+    '<div class="data-stat-card">'
+    +'<div class="data-stat-val">'+s.val+'</div>'
+    +'<div class="data-stat-lbl">'+s.lbl+'</div>'
+    +'</div>'
+  ).join('');
 }
+
+// 保持向后兼容
+function renderDataPage() { renderDataOverview(); }
 
 // ── Export ────────────────────────────────────────────────────
 function exportData() {
@@ -1997,7 +2683,118 @@ function clearDemoData() {
   save(); render();
 }
 
+// ── Followup helpers ─────────────────────────────────────────
+function getFollowupStatus(p) {
+  if (!p.followCycle || !p.lastContact) return { status:'no-cycle', label:'未设定', days:null };
+  const last  = new Date(p.lastContact);
+  const today = new Date();
+  const daysPassed = Math.floor((today - last) / 86400000);
+  const cycle = parseInt(p.followCycle);
+  const daysLeft = cycle - daysPassed;
+  if (daysLeft < 0)   return { status:'overdue', label:'已超期 '+Math.abs(daysLeft)+'天', days:daysLeft };
+  if (daysLeft <= 7)  return { status:'soon',    label:'还剩 '+daysLeft+' 天', days:daysLeft };
+  return { status:'ok', label:'还剩 '+daysLeft+' 天', days:daysLeft };
+}
+
+function markContacted(id) {
+  const p = people.find(x=>x.id===id);
+  if (!p) return;
+  p.lastContact = new Date().toISOString().slice(0,10);
+  p.updatedAt   = new Date().toISOString();
+  save();
+
+  // 计算下次提醒时间
+  const cycleMap = {'7':'7天','30':'30天','90':'90天','180':'180天','365':'365天'};
+  const nextTip  = p.followCycle ? '下次提醒：' + (cycleMap[p.followCycle]||p.followCycle+'天') + '后' : '';
+  showToast('✓', '<strong>'+p.name+'</strong> 今日联系已记录' + (nextTip ? ' · '+nextTip : ''));
+
+  if (page === 'followup') {
+    // 卡片淡出后刷新
+    const card = document.querySelector('.followup-card[data-id="'+id+'"]');
+    if (card) {
+      card.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(16px)';
+      setTimeout(() => {
+        renderFollowup();
+        updateFollowupBadge();
+        if (selected === id) renderDetail();
+      }, 300);
+    } else {
+      renderFollowup();
+      updateFollowupBadge();
+      if (selected === id) renderDetail();
+    }
+  } else {
+    updateFollowupBadge();
+    if (selected === id) renderDetail();
+  }
+}
+
+function updateFollowupBadge() {
+  const urgent = people.filter(p => {
+    const s = getFollowupStatus(p);
+    return s.status==='overdue' || s.status==='soon';
+  }).length;
+  const badge = document.getElementById('followup-badge');
+  if (!badge) return;
+  badge.style.display = urgent > 0 ? 'inline-block' : 'none';
+  badge.textContent   = urgent;
+}
+
+function renderFollowup() {
+  const list  = document.getElementById('followup-list');
+  const count = document.getElementById('followup-count');
+  if (!list) return;
+
+  // 只显示需要跟进的人：超期 + 即将到期
+  const withCycle = people.filter(p => p.followCycle);
+
+  const sorted = [
+    ...withCycle.filter(p => getFollowupStatus(p).status==='overdue'),
+    ...withCycle.filter(p => getFollowupStatus(p).status==='soon'),
+  ];
+
+  count.textContent = sorted.length > 0 ? sorted.length+' 人需要跟进' : '暂无需跟进';
+
+  if (!sorted.length) {
+    const hasAnyCycle = people.some(p=>p.followCycle);
+    if (hasAnyCycle) {
+      list.innerHTML = '<div class="followup-empty"><div class="followup-empty-icon">🎉</div><div class="followup-empty-text">太棒了，所有跟进都已完成</div></div>';
+    } else {
+      list.innerHTML = '<div class="followup-empty"><div class="followup-empty-icon">🕐</div><div class="followup-empty-text">暂无联系人 · 请先在编辑页设定跟进周期</div></div>';
+    }
+    return;
+  }
+
+  list.innerHTML = sorted.map((p, i) => {
+    const c   = getColor(p);
+    const st  = getFollowupStatus(p);
+    const lastStr = p.lastContact ? p.lastContact : '从未记录';
+    const cycleMap = {'7':'每周','30':'每月','90':'每季度','180':'每半年','365':'每年'};
+    const cycleStr = p.followCycle ? cycleMap[p.followCycle]||p.followCycle+'天' : '未设定';
+    const pid = p.id;
+    const actionBtn = st.status!=='no-cycle'
+      ? '<button class="followup-action" onclick="event.stopPropagation();markContacted(\'' + pid + '\')">✓ 今天联系了</button>'
+      : '';
+    return '<div class="followup-card '+st.status+'" data-id="'+pid+'" style="animation-delay:'+i*0.03+'s" onclick="selectPerson(\'' + pid + '\')">'
+      + '<div class="followup-avatar" style="background:'+c+'18;color:'+c+'">'+p.name[0]+'</div>'
+      + '<div class="followup-body">'
+      + '<div class="followup-name">'+p.name+'</div>'
+      + '<div class="followup-meta">'+(p.job||p.industry||'—')+' · 跟进周期：'+cycleStr+'<br>上次联系：'+lastStr+'</div>'
+      + '</div>'
+      + '<div class="followup-status">'
+      + '<div class="followup-badge '+st.status+'">'+st.label+'</div>'
+      + actionBtn
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
 // ── Master render ─────────────────────────────────────────────
+// 切换页面时清除图谱高亮
+const _origSetPage = setPage;
+
 function checkWelcome() {
   // 没有联系人时显示欢迎页（无论当前在哪个页面）
   if (people.length === 0) {
@@ -2009,10 +2806,13 @@ function checkWelcome() {
 
 function render() {
   updateStats();
-  if (checkWelcome()) return;  // 无数据时直接显示欢迎页，不渲染其他内容
-  if (page==='contacts') renderContacts();
-  if (page==='graph') renderGraph();
-  if (page==='data') renderDataPage();
+  if (checkWelcome()) return;
+  updateFollowupBadge();
+  if (page==='contacts')      renderContacts();
+  if (page==='graph')         renderGraph();
+  if (page==='data-overview') renderDataOverview();
+  if (page==='data-charts')   renderCharts();
+  if (page==='followup')      renderFollowup();
   renderDetail();
 }
 
@@ -2032,11 +2832,12 @@ render();
 // Click blank area to dismiss detail panel
 document.querySelector('.center').addEventListener('click', e => {
   // Only dismiss if the click target is blank (not a card, node, or button)
-  const ignored = e.target.closest('.contact-card, .node-group, button, input, select, textarea, .graph-toolbar');
+  const ignored = e.target.closest('.contact-card, .followup-card, .node-group, button, input, select, textarea, .graph-toolbar');
   if (!ignored && selected) {
     selected = null;
     renderDetail();
     if (page === 'contacts') renderContacts();
+  if (page === 'followup') renderFollowup();
   }
 });
 render();
